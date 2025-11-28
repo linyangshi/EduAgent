@@ -1,0 +1,12 @@
+# AI文档编辑器 - 依赖包
+# AI Document Editor - Dependencies
+
+# Web框架
+flask>=2.0.0
+werkzeug>=2.0.0
+
+# HTTP客户端 (用于LLM调用)
+httpx>=0.24.0
+
+# 可选: DOCX处理 (完整功能需要)
+# python-docx>=0.8.11
