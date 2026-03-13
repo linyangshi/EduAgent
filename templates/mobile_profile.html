@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>个人信息 - EduAgent 智教创想</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile_login.css', v=5) }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: #f4f7f9; /* Standardized light grey background */
+            margin: 0;
+            padding: 0;
+            display: block;
+            width: 100%;
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+        .header {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f4f7f9;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding-top: calc(10px + env(safe-area-inset-top));
+        }
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            color: #007aff;
+            text-decoration: none;
+            font-size: 24px;
+        }
+        .header-title {
+            font-size: 19px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        .btn-placeholder { width: 40px; } /* For centering title */
+
+        .content {
+            padding: 0 16px 40px;
+        }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* Generic Card Style */
+        .premium-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        /* Profile Styles */
+        .avatar-edit-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0 32px;
+        }
+        .avatar-wrapper {
+            position: relative;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            margin-bottom: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+        #p-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #1677ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 700;
+        }
+        .camera-icon {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 28px;
+            height: 28px;
+            background: #1677ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            border: 2px solid white;
+            font-size: 12px;
+        }
+        .change-avatar-text {
+            font-size: 14px;
+            color: #1677ff;
+            font-weight: 500;
+        }
+
+        /* Account & Security Styles (Mockup Style) */
+        .security-input-group {
+            border-bottom: 1px solid #f2f2f7;
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+        }
+        .security-input-group:last-child { border-bottom: none; }
+        .security-label {
+            width: 100px;
+            font-size: 17px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        .security-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 17px;
+            color: #1a1a1a;
+            padding: 0;
+            background: transparent;
+        }
+        .security-input::placeholder { color: #c7c7cc; }
+        .security-input:disabled { color: #8e8e93; }
+
+        .tip-box {
+            background: #ebf3ff;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-top: 20px;
+            display: flex;
+            gap: 8px;
+            line-height: 1.5;
+        }
+        .tip-icon { color: #facc15; font-size: 14px; margin-top: 3px; }
+        .tip-text { font-size: 13px; color: #1677ff; }
+
+        .action-btn-container {
+            margin: 32px 0;
+        }
+        .ios-btn {
+            width: 200px;
+            height: 60px;
+            background: #c7c7cc; /* Gray by default like mockup */
+            color: white;
+            border-radius: 16px;
+            border: none;
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .ios-btn.active {
+            background: #1677ff;
+            box-shadow: 0 8px 24px rgba(22, 119, 255, 0.2);
+        }
+        .ios-btn:active { transform: scale(0.97); }
+
+        .sub-title {
+            font-size: 15px;
+            color: #8e8e93;
+            margin-bottom: 12px;
+            padding-left: 4px;
+        }
+
+        .device-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid #f2f2f7;
+        }
+        .device-item:last-child { border-bottom: none; }
+        .device-left { display: flex; align-items: center; gap: 16px; }
+        .device-icon {
+            width: 48px;
+            min-width: 48px;
+            height: 48px;
+            background: #f2f2f7;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #1a1a1a;
+        }
+        .device-info h4 { margin: 0; font-size: 16px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+        .device-info p { margin: 0; font-size: 13px; color: #8e8e93; }
+        .current-badge {
+            background: #e8f7ed;
+            color: #10b981;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 6px;
+            display: inline-block;
+        }
+        .remove-btn {
+            color: #ff3b30;
+            font-size: 16px;
+            font-weight: 700;
+            background: none;
+            border: none;
+            padding: 0;
+            white-space: nowrap;
+        }
+
+        .footer-tip {
+            font-size: 13px;
+            color: #8e8e93;
+            line-height: 1.8;
+            padding: 20px 4px;
+            text-align: left;
+        }
+
+        /* Message Overlay */
+        #msg-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 2000;
+            display: none;
+            text-align: center;
+            min-width: 120px;
+        }
+    </style>
+</head>
+<body>
+    <div id="msg-toast"></div>
+
+    <header class="header">
+        <a href="/app" class="back-btn">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        <span class="header-title" id="pageTitle">个人信息</span>
+        <div class="btn-placeholder"></div>
+    </header>
+
+    <div class="content">
+        <!-- Edit Profile Section -->
+        <div id="profileSection" class="section">
+            <div class="avatar-edit-container" id="avatarClickArea">
+                <div class="avatar-wrapper">
+                    <div id="p-avatar">?</div>
+                    <div class="camera-icon"><i class="fas fa-camera"></i></div>
+                </div>
+                <span class="change-avatar-text">点击修改头像</span>
+                <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+            </div>
+
+            <div class="premium-card">
+                <div class="security-input-group">
+                    <span class="security-label">用户名</span>
+                    <input type="text" id="username" class="security-input" disabled>
+                </div>
+                <div class="security-input-group">
+                    <span class="security-label">电子邮箱</span>
+                    <input type="email" id="email" class="security-input" disabled>
+                </div>
+                <div class="security-input-group">
+                    <span class="security-label">真实姓名</span>
+                    <input type="text" id="fullName" class="security-input" placeholder="请输入姓名">
+                </div>
+            </div>
+
+            <div class="action-btn-container">
+                <button class="ios-btn active" id="saveProfileBtn">保存资料</button>
+            </div>
+        </div>
+
+        <!-- Account Security Section (Unified Password & Sessions) -->
+        <div id="securitySection" class="section">
+            <div class="premium-card">
+                <div class="security-input-group">
+                    <span class="security-label">当前密码</span>
+                    <input type="password" id="oldPassword" class="security-input" placeholder="请输入当前密码">
+                </div>
+                <div class="security-input-group">
+                    <span class="security-label">新密码</span>
+                    <input type="password" id="newPassword" class="security-input" placeholder="请输入新密码">
+                </div>
+                <div class="security-input-group">
+                    <span class="security-label">确认密码</span>
+                    <input type="password" id="confirmPassword" class="security-input" placeholder="再次输入新密码">
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <i class="fas fa-lightbulb tip-icon"></i>
+                <span class="tip-text">密码规范：长度至少8位，需要包含大小写字母、数字及特殊符号（如@#%等）。</span>
+            </div>
+
+            <div class="action-btn-container">
+                <button class="ios-btn" id="savePasswordBtn">更新密码</button>
+            </div>
+
+            <h3 class="sub-title">登录设备管理</h3>
+            <div class="premium-card" id="sessionsList">
+                <!-- Session items will be inserted here -->
+                <div style="padding: 20px; text-align: center; color: #8e8e93;">加载中...</div>
+            </div>
+
+            <div class="footer-tip">
+                提示：如发现异常登录设备，请立即修改密码并将其移除。为了您的账户安全，修改密码后所有设备将需要重新登录。
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = sessionStorage.getItem('access_token') || localStorage.getItem('access_token');
+        if (!token) {
+            location.href = '/mobile-login';
+        }
+
+        const toast = document.getElementById('msg-toast');
+        const pAvatar = document.getElementById('p-avatar');
+        const usernameInput = document.getElementById('username');
+        const emailInput = document.getElementById('email');
+        const fullNameInput = document.getElementById('fullName');
+        const avatarInput = document.getElementById('avatarInput');
+        const pageTitle = document.getElementById('pageTitle');
+        const sessionsList = document.getElementById('sessionsList');
+        
+        function showToast(text) {
+            toast.innerText = text;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2000);
+        }
+
+        // Section handling
+        function initSection() {
+            const params = new URLSearchParams(window.location.search);
+            const section = params.get('section');
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            
+            if (section === 'sessions' || section === 'password') {
+                document.getElementById('securitySection').classList.add('active');
+                pageTitle.innerText = '账号与安全';
+                loadSessions();
+            } else {
+                document.getElementById('profileSection').classList.add('active');
+                pageTitle.innerText = '编辑资料';
+            }
+        }
+        initSection();
+
+        // Passsword button state handling
+        const pwdInputs = ['oldPassword', 'newPassword', 'confirmPassword'];
+        pwdInputs.forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                const allFilled = pwdInputs.every(sid => document.getElementById(sid).value.length > 0);
+                const btn = document.getElementById('savePasswordBtn');
+                if (allFilled) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        });
+
+        // Load profile
+        async function loadProfile() {
+            try {
+                const response = await fetch('/api/auth/profile', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    const user = result.user;
+                    usernameInput.value = user.username;
+                    emailInput.value = user.email;
+                    fullNameInput.value = user.full_name || '';
+                    if (user.avatar_url) {
+                        pAvatar.innerHTML = `<img src="${user.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+                    } else {
+                        pAvatar.innerText = user.username[0].toUpperCase();
+                    }
+                }
+            } catch (err) {}
+        }
+
+        // Load Sessions
+        async function loadSessions() {
+            try {
+                const response = await fetch('/api/auth/sessions', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    renderSessions(result.sessions);
+                }
+            } catch (err) {
+                sessionsList.innerHTML = '<div style="padding: 20px; text-align: center; color: #ff3b30;">加载失败</div>';
+            }
+        }
+
+        function getDeviceIcon(osName) {
+            if (!osName) return 'fas fa-mobile-alt';
+            const os = osName.toLowerCase();
+            if (os.includes('macos') || os.includes('mac os')) return 'fab fa-apple';
+            if (os.includes('windows')) return 'fab fa-windows';
+            if (os.includes('ios') || os.includes('android') || os.includes('iphone')) return 'fas fa-mobile-alt';
+            if (os.includes('ipad') || os.includes('tablet')) return 'fas fa-tablet-alt';
+            return 'fas fa-desktop';
+        }
+
+        function renderSessions(sessions) {
+            sessionsList.innerHTML = '';
+            if (sessions.length === 0) {
+                sessionsList.innerHTML = '<div style="padding: 20px; text-align: center;">暂无会话</div>';
+                return;
+            }
+
+            sessions.forEach(s => {
+                const isCurrent = s.session_token === token;
+                const date = new Date(s.last_used_at);
+                const dateStr = `${date.getMonth() + 1}月${date.getDate()}日 ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                const deviceName = s.device_name || '未知设备';
+                const systemInfo = s.os_name ? `(${s.os_name})` : '';
+                const iconClass = getDeviceIcon(s.os_name);
+
+                const div = document.createElement('div');
+                div.className = 'device-item';
+                div.innerHTML = `
+                    <div class="device-left">
+                        <div class="device-icon"><i class="${iconClass}"></i></div>
+                        <div class="device-info">
+                            <h4>${deviceName} ${systemInfo}</h4>
+                            <p>最后活动: ${dateStr}</p>
+                            ${isCurrent ? '<span class="current-badge">当前设备</span>' : ''}
+                        </div>
+                    </div>
+                    ${!isCurrent ? `<button class="remove-btn" onclick="revokeSession(${s.id})">移除</button>` : ''}
+                `;
+                sessionsList.appendChild(div);
+            });
+        }
+
+        async function revokeSession(id) {
+            if (!confirm('确定要从该设备退出登录吗？')) return;
+            try {
+                const response = await fetch(`/api/auth/sessions/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('移除成功');
+                    loadSessions();
+                } else {
+                    showToast(result.error);
+                }
+            } catch (err) {
+                showToast('网络错误');
+            }
+        }
+
+        // Upload Avatar
+        document.getElementById('avatarClickArea').addEventListener('click', () => avatarInput.click());
+        avatarInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('avatar', file);
+            try {
+                showToast('正在上传...');
+                const response = await fetch('/api/auth/upload-avatar', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    pAvatar.innerHTML = `<img src="${result.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+                    showToast('头像更新成功');
+                } else {
+                    showToast(result.error);
+                }
+            } catch (err) {
+                showToast('上传失败');
+            }
+        });
+
+        // Save Profile
+        document.getElementById('saveProfileBtn').addEventListener('click', async () => {
+            const fullName = fullNameInput.value.trim();
+            try {
+                const response = await fetch('/api/auth/profile', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ full_name: fullName })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('资料更新成功');
+                    setTimeout(() => location.href = '/app', 1000);
+                } else { showToast(result.error); }
+            } catch (err) { showToast('发布失败'); }
+        });
+
+        // Change Password
+        document.getElementById('savePasswordBtn').addEventListener('click', async () => {
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (!oldPassword || !newPassword || !confirmPassword) return;
+            if (newPassword !== confirmPassword) return showToast('新密码不一致');
+
+            try {
+                const response = await fetch('/api/auth/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ old_password: oldPassword, new_password: newPassword })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('修改成功，请重新登录');
+                    setTimeout(() => {
+                        localStorage.removeItem('access_token');
+                        sessionStorage.removeItem('access_token');
+                        location.href = '/mobile-login';
+                    }, 2000);
+                } else { showToast(result.error); }
+            } catch (err) { showToast('修改失败'); }
+        });
+
+        loadProfile();
+    </script>
+</body>
+</html>
