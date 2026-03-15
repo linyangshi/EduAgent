@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>意见反馈 - EduAgent 智教创想</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile_login.css', v=5) }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: #f4f7f9;
+            margin: 0;
+            padding: 0;
+            display: block;
+            width: 100%;
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+        .header {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f4f7f9;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding-top: calc(10px + env(safe-area-inset-top));
+        }
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            color: #007aff;
+            text-decoration: none;
+            font-size: 24px;
+        }
+        .header-title {
+            font-size: 19px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        .btn-placeholder { width: 40px; }
+
+        .content {
+            padding: 0 16px 40px;
+        }
+
+        .premium-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            padding: 20px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            color: #8e8e93;
+            margin-bottom: 12px;
+            padding-left: 4px;
+            font-weight: 600;
+        }
+
+        /* Feedback Type Selection */
+        .feedback-types {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .type-option input {
+            display: none;
+        }
+        .type-box {
+            display: block;
+            padding: 12px 4px;
+            text-align: center;
+            background: #f2f2f7;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #3a3a3c;
+            transition: all 0.2s;
+        }
+        .type-option input:checked + .type-box {
+            background: #fff;
+            border-color: #1677ff;
+            color: #1677ff;
+            box-shadow: 0 4px 12px rgba(22, 119, 255, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        .required { color: #ff3b30; }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #f2f2f7;
+            background: #f2f2f7;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 16px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s;
+        }
+        textarea {
+            min-height: 160px;
+            resize: none;
+        }
+        textarea:focus, input[type="text"]:focus {
+            background: #fff;
+            border-color: #1677ff;
+            box-shadow: 0 0 0 4px rgba(22, 119, 255, 0.05);
+        }
+
+        .action-btn-container {
+            margin-top: 32px;
+        }
+        .ios-btn {
+            width: 100%;
+            height: 56px;
+            background: #1677ff;
+            color: white;
+            border-radius: 16px;
+            border: none;
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(22, 119, 255, 0.2);
+            transition: all 0.3s;
+        }
+        .ios-btn:active { transform: scale(0.98); opacity: 0.9; }
+        .ios-btn:disabled { background: #c7c7cc; box-shadow: none; opacity: 0.7; }
+
+        /* History List */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .history-item {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            border-left: 4px solid #1677ff;
+        }
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .history-type {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1677ff;
+            background: rgba(22, 119, 255, 0.08);
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+        .history-date {
+            font-size: 12px;
+            color: #8e8e93;
+        }
+        .history-content {
+            font-size: 15px;
+            color: #1a1a1a;
+            line-height: 1.5;
+            margin-bottom: 12px;
+            word-break: break-all;
+        }
+        .history-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .status-badge {
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+        .status-pending { background: #fff1f0; color: #ff3b30; }
+        .status-processing { background: #fffbe6; color: #faad14; }
+        .status-resolved { background: #f6ffed; color: #52c41a; }
+
+        /* Toast */
+        #msg-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 600;
+            z-index: 2000;
+            display: none;
+            text-align: center;
+            min-width: 140px;
+            backdrop-filter: blur(10px);
+        }
+
+        .loading-more {
+            text-align: center;
+            padding: 20px;
+            color: #8e8e93;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="msg-toast"></div>
+
+    <header class="header">
+        <a href="/app" class="back-btn">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        <span class="header-title">意见反馈</span>
+        <div class="btn-placeholder"></div>
+    </header>
+
+    <div class="content">
+        <div class="premium-card">
+            <form id="feedbackForm">
+                <div class="form-group">
+                    <label class="form-label">反馈类型</label>
+                    <div class="feedback-types">
+                        <label class="type-option">
+                            <input type="radio" name="type" value="suggestion" checked>
+                            <span class="type-box">✨ 建议</span>
+                        </label>
+                        <label class="type-option">
+                            <input type="radio" name="type" value="bug">
+                            <span class="type-box">🐛 Bug</span>
+                        </label>
+                        <label class="type-option">
+                            <input type="radio" name="type" value="other">
+                            <span class="type-box">📝 其他</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="content">反馈内容 <span class="required">*</span></label>
+                    <textarea id="f-content" name="content" placeholder="请详细描述您的建议或遇到的问题..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="contact">联系方式 (选填)</label>
+                    <input type="text" id="contact" name="contact" placeholder="留下邮箱或手机号">
+                </div>
+
+                <div class="action-btn-container">
+                    <button type="submit" class="ios-btn" id="submitBtn">提交反馈</button>
+                </div>
+            </form>
+        </div>
+
+        <h3 class="section-title">反馈记录</h3>
+        <div id="feedbackList" class="history-list">
+            <div class="loading-more">加载中...</div>
+        </div>
+    </div>
+
+    <script>
+        const token = sessionStorage.getItem('access_token') || localStorage.getItem('access_token');
+        if (!token) {
+            location.href = '/mobile-login';
+        }
+
+        const toast = document.getElementById('msg-toast');
+        const form = document.getElementById('feedbackForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const listContainer = document.getElementById('feedbackList');
+
+        function showToast(text) {
+            toast.innerText = text;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2000);
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const content = document.getElementById('f-content').value.trim();
+            if (!content) return showToast('请输入反馈内容');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = '提交中...';
+
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    showToast('反馈提交成功！');
+                    form.reset();
+                    loadHistory();
+                } else {
+                    showToast(result.error || '提交失败');
+                }
+            } catch (err) {
+                showToast('网络错误，请稍后再试');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '提交反馈';
+            }
+        });
+
+        async function loadHistory() {
+            try {
+                const response = await fetch('/api/feedback/history', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    renderHistory(result.feedbacks);
+                } else {
+                    listContainer.innerHTML = '<div class="loading-more">加载失败</div>';
+                }
+            } catch (err) {
+                listContainer.innerHTML = '<div class="loading-more">网络错误</div>';
+            }
+        }
+
+        function getTypeText(type) {
+            const types = { 'suggestion': '产品建议', 'bug': '程序Bug', 'other': '其他' };
+            return types[type] || '其他';
+        }
+
+        function getStatusText(status) {
+            const statuses = { 'pending': '待处理', 'processing': '处理中', 'resolved': '已解决' };
+            return statuses[status] || status;
+        }
+
+        function formatDate(iso) {
+            const d = new Date(iso);
+            return `${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        }
+
+        function renderHistory(feedbacks) {
+            if (!feedbacks || feedbacks.length === 0) {
+                listContainer.innerHTML = '<div class="loading-more">暂无反馈记录</div>';
+                return;
+            }
+
+            listContainer.innerHTML = feedbacks.map(item => `
+                <div class="history-item">
+                    <div class="history-header">
+                        <span class="history-type">${getTypeText(item.type)}</span>
+                        <span class="history-date">${formatDate(item.created_at)}</span>
+                    </div>
+                    <div class="history-content">${item.content}</div>
+                    <div class="history-footer">
+                        <span class="status-badge status-${item.status}">${getStatusText(item.status)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        loadHistory();
+    </script>
+</body>
+</html>
