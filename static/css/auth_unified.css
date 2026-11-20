@@ -1,0 +1,606 @@
+/**
+ * 统一认证界面样式
+ * Unified Auth Interface Styles
+ */
+
+:root {
+    --primary-color: #1677ff;
+    --primary-hover: #4096ff;
+    --success-color: #52c41a;
+    --error-color: #ff4d4f;
+    --text-primary: #000000;
+    --text-secondary: #666666;
+    --text-disabled: #999999;
+    --border-color: #d9d9d9;
+    --bg-light: #fafafa;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #ffffff;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+/* 主容器 - 左右分栏 */
+.auth-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ============ 左侧品牌区 ============ */
+.brand-section {
+    flex: 0 0 40%;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    padding: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 添加装饰性渐变覆盖 */
+.brand-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(96, 165, 250, 0.1) 10%, transparent 40%);
+    animation: rotate 30s linear infinite;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.brand-content {
+    position: relative;
+    z-index: 1;
+    color: #1e40af;
+    max-width: 500px;
+}
+
+.logo-area {
+    margin-bottom: 48px;
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.logo {
+    font-size: 64px;
+    margin-bottom: 16px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.brand-name {
+    font-size: 32px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.5px;
+    color: #1e3a8a;
+}
+
+.brand-message {
+    margin-bottom: 60px;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.brand-message h2 {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    line-height: 1.2;
+    color: #1e3a8a;
+}
+
+.subtitle {
+    font-size: 16px;
+    opacity: 0.8;
+    font-weight: 400;
+    color: #475569;
+}
+
+.brand-visual {
+    width: 100%;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeInUp 1s ease-out;
+    border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.visual-placeholder {
+    font-size: 48px;
+    opacity: 0.3;
+    color: #60a5fa;
+}
+
+/* ============ 右侧表单区 ============ */
+.form-section {
+    flex: 0 0 60%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    background: #ffffff;
+}
+
+.form-container {
+    width: 100%;
+    max-width: 440px;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.welcome-title {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 32px;
+    text-align: center;
+    color: var(--text-primary);
+}
+
+/* 标签切换 */
+.auth-tabs {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 12px 0;
+    font-size: 16px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    position: relative;
+    transition: color 0.3s;
+    font-weight: 500;
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary-color);
+}
+
+.tab-btn:hover {
+    color: var(--primary-color);
+}
+
+/* 表单 */
+.auth-form {
+    display: none;
+}
+
+.auth-form.active {
+    display: block;
+    animation: fadeIn 0.3s;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 15px;
+    transition: all 0.3s;
+    background: #ffffff;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+}
+
+.form-group input::placeholder {
+    color: var(--text-disabled);
+}
+
+.toggle-password {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    user-select: none;
+    font-size: 18px;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+}
+
+.toggle-password:hover {
+    opacity: 1;
+}
+
+/* 表单行（记住密码/忘记密码） */
+.form-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.checkbox-label span {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.link-text {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 14px;
+    transition: opacity 0.3s;
+}
+
+.link-text:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
+/* 协议文本 */
+.terms-text {
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+/* 验证码输入组 */
+.verification-group {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.code-btn {
+    flex-shrink: 0;
+    padding: 12px 16px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+}
+
+.code-btn:hover {
+    background: var(--primary-hover);
+}
+
+.code-btn:disabled {
+    background: var(--bg-light);
+    color: var(--text-disabled);
+    cursor: not-allowed;
+}
+
+/* 协议复选框 */
+.agreement-checkbox {
+    margin-bottom: 20px;
+}
+
+.agreement-checkbox .checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.agreement-checkbox input[type="checkbox"] {
+    margin-top: 2px;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.agreement-checkbox span {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+
+/* 提交按钮 */
+.submit-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.submit-btn:hover {
+    background: var(--primary-hover);
+    box-shadow: var(--shadow-sm);
+}
+
+.submit-btn:active {
+    transform: scale(0.98);
+}
+
+.submit-btn:disabled {
+    background: var(--bg-light);
+    color: var(--text-disabled);
+    cursor: not-allowed;
+}
+
+/* 错误提示 */
+.error-message {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: #fff2f0;
+    border: 1px solid #ffccc7;
+    border-radius: 6px;
+    color: var(--error-color);
+    font-size: 14px;
+}
+
+/* 分隔线 */
+.divider {
+    display: flex;
+    align-items: center;
+    margin: 32px 0 24px;
+    color: var(--text-disabled);
+    font-size: 14px;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-color);
+}
+
+.divider span {
+    padding: 0 16px;
+}
+
+/* 社交登录按钮 */
+.social-login {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.social-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.3s;
+    border: 1px solid var(--border-color);
+    background: white;
+}
+
+.social-btn.wechat {
+    color: #07c160;
+    border-color: #07c160;
+}
+
+.social-btn.wechat:hover {
+    background: #07c160;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.social-btn.qq {
+    color: #12B7F5;
+    border-color: #12B7F5;
+}
+
+.social-btn.qq:hover {
+    background: #12B7F5;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* 底部切换提示 */
+.switch-tip {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.switch-tip .link-text {
+    margin-left: 4px;
+}
+
+/* 密码强度校验 */
+.password-requirements {
+    font-size: 12px;
+    margin-top: 8px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    margin-bottom: 12px;
+}
+
+.req-title {
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.req-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.req-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    transition: all 0.3s;
+}
+
+.req-item .icon {
+    font-size: 12px;
+    width: 14px;
+    height: 14px;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.req-item.valid {
+    color: var(--success-color);
+}
+
+.req-item.valid .icon {
+    color: var(--success-color);
+    content: '✓';
+}
+
+.req-item.invalid {
+    color: var(--error-color);
+}
+
+/* 动画 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+    .auth-container {
+        flex-direction: column;
+    }
+
+    .brand-section {
+        flex: none;
+        min-height: 40vh;
+        padding: 40px;
+    }
+
+    .brand-message h2 {
+        font-size: 28px;
+    }
+
+    .brand-visual {
+        height: 200px;
+    }
+
+    .form-section {
+        flex: none;
+        min-height: 60vh;
+    }
+}
+
+@media (max-width: 768px) {
+    .brand-section {
+        padding: 30px 20px;
+    }
+
+    .logo {
+        font-size: 48px;
+    }
+
+    .brand-name {
+        font-size: 24px;
+    }
+
+    .brand-message h2 {
+        font-size: 24px;
+    }
+
+    .form-section {
+        padding: 30px 20px;
+    }
+
+    .welcome-title {
+        font-size: 24px;
+    }
+
+    .form-container {
+        max-width: 100%;
+    }
+}

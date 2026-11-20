@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <title>EduAgent智教创想</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% if is_mobile %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
+    {% endif %}
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.svg') }}" type="image/svg+xml">
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <div class="top-navbar">
+        <div class="navbar-left">
+            <div class="logo">
+                <div class="logo-icon">🎓</div>
+                <div class="logo-text">EduAgent智教创想</div>
+            </div>
+        </div>
+        
+        <div class="navbar-right">
+            <!-- 用户认证区域 -->
+            <div class="user-auth-area" id="userAuthArea">
+                <!-- 未登录状态 -->
+                <div class="auth-buttons" id="authButtons" style="display: none;">
+                    <a href="/login" class="auth-btn sign-in-btn">登录</a>
+                    <a href="/register" class="auth-btn sign-up-btn">注册</a>
+                </div>
+                
+                <!-- 已登录状态 -->
+                <div class="user-info" id="userInfo" style="display: none;">
+                    <div class="user-avatar">
+                        <span id="userAvatar">👤</span>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name" id="userName">用户名</span>
+                        <div class="user-menu" id="userMenu" style="display: none;">
+                            <a href="/profile">个人资料/设置</a>
+                            <a href="#" onclick="logout()">退出登录</a>
+                        </div>
+                    </div>
+                    <button class="nav-btn" onclick="toggleUserMenu()" title="用户菜单">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <button class="nav-btn" id="exportBtn" onclick="exportLessons()" title="导出教案" style="display: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <polyline points="7,10 12,15 17,10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+            <button class="nav-btn" onclick="resetSession()" title="重置会话">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 12A9 9 0 1 0 21 12A9 9 0 0 0 3 12Z" stroke="currentColor" stroke-width="2"/>
+                    <path d="M9 12L12 9L15 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 9V21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- 主聊天区域 -->
+    <div class="main-chat-area">
+        <!-- 欢迎界面 -->
+        <div class="welcome-screen" id="welcomeScreen">
+            <div class="welcome-content">
+                <div class="welcome-icon">🎓</div>
+                <h1>EduAgent智教创想</h1>
+                <p>基于通义千问的智能教育助手</p>
+                
+                <div class="welcome-features">
+                    <div class="feature-item" onclick="startChatMode()">
+                        <div class="feature-icon">💬</div>
+                        <div class="feature-text">
+                            <h4>智能对话</h4>
+                            <p>询问教学相关问题</p>
+                        </div>
+                    </div>
+                    <div class="feature-item" onclick="showLessonGenerationOptions()">
+                        <div class="feature-icon">📄</div>
+                        <div class="feature-text">
+                            <h4>教案生成</h4>
+                            <p>对话生成或AI填充模板</p>
+                        </div>
+                    </div>
+                    <div class="feature-item" onclick="checkAuthAndOpenV5Generation()">
+                        <div class="feature-icon">🚀</div>
+                        <div class="feature-text">
+                            <h4>V5智能生成</h4>
+                            <p>新一代智能文档生成</p>
+                        </div>
+                    </div>
+                    <div class="feature-item" onclick="checkAuthAndOpenKnowledgeBase()">
+                        <div class="feature-icon">📚</div>
+                        <div class="feature-text">
+                            <h4>AI知识库</h4>
+                            <p>上传文档，智能问答</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 手机端提示：位于三项可选项的正中间下方 -->
+                <div class="mobile-mode-caption">请选择模式：智能对话、教案生成 或 AI知识库</div>
+
+                <div class="quick-start">
+                    <div class="start-step">
+                        <div class="step-content">
+                            <h3>选择模式</h3>
+                            <p>点击上方功能卡片选择使用模式</p>
+                        </div>
+                    </div>
+                    <div class="start-step">
+                        <div class="step-content">
+                            <h3>智能对话</h3>
+                            <p>直接输入问题或需求进行交流</p>
+                        </div>
+                    </div>
+                    <div class="start-step">
+                        <div class="step-content">
+                            <h3>教案生成</h3>
+                            <p>上传模板后自动生成完整教案</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 聊天界面 -->
+        <div class="chat-container" id="chatContainer" style="display: none;">
+            <div class="chat-messages" id="chatMessages">
+                <!-- 消息将在这里动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部输入区域 -->
+    <div class="bottom-input-area" style="display: none;">
+        <div class="input-container">
+            <!-- 模型选择区域 -->
+            <div class="model-selection-area" id="modelSelectionArea" style="display: none; margin-bottom: 0.75rem; padding: 0.5rem 0;">
+                <label for="chatModelSelect" style="font-size: 0.9rem; color: #374151; font-weight: 500; margin-right: 0.75rem;">选择模型:</label>
+                <select id="chatModelSelect" style="padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 0.9rem; background: white; cursor: pointer; max-width: 350px;">
+                    <option value="qwen-plus">DocuMind1（标准）</option>
+                    <option value="super">DocuMind1-pro（进阶）</option>
+                </select>
+            </div>
+
+            <div class="input-wrapper">
+                <textarea
+                    class="chat-input"
+                    id="chatInput"
+                    placeholder="输入您的问题或需求，例如：如何设计有效的课堂教学？或 请帮我生成数据结构课程的教案..."
+                    rows="1"
+                ></textarea>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="input-footer">
+                <div class="file-upload-area" id="fileUploadArea" style="display: none;">
+                    <input type="file" id="fileInput" accept=".doc,.docx,.jpg,.jpeg,.png,.pdf" style="display: none;">
+                    <button class="file-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M14 2H6A2 2 0 0 0 4 4V20A2 2 0 0 0 6 22H18A2 2 0 0 0 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <polyline points="14,2 14,8 20,8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        上传文件
+                    </button>
+                </div>
+
+                <div class="typing-indicator" id="typingIndicator" style="display: none;">
+                    <div class="typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <span>AI正在思考...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框 -->
+    <!-- 模板上传模态框 -->
+    <div class="modal" id="templateModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>上传教案模板</h3>
+                <button class="close-btn" onclick="closeModal('templateModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-area" id="templateUploadArea">
+                    <div class="upload-icon">📄</div>
+                    <p>拖拽文件到此处或点击选择文件</p>
+                    <p class="upload-hint">支持 .doc, .docx, .jpg, .png 格式</p>
+                    <input type="file" id="templateFileInput" accept=".doc,.docx,.jpg,.jpeg,.png,.pdf" style="display: none;">
+                </div>
+                <div class="upload-progress" id="templateProgress" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="templateProgressFill"></div>
+                    </div>
+                    <div class="progress-text" id="templateProgressText">上传中...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('templateModal')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 教案生成选项模态框 -->
+    <div class="modal" id="lessonGenerationOptionsModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>📄 选择教案生成方式</h3>
+                <button class="close-btn" onclick="closeModal('lessonGenerationOptionsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: #6b7280; margin-bottom: 1.5rem; text-align: center;">
+                    请选择您想要使用的教案生成方式
+                </p>
+                
+                <div style="display: grid; gap: 1rem;">
+                    <!-- 普通生成选项 -->
+                    <div class="generation-option-card" onclick="selectNormalGeneration()">
+                        <div class="option-header">
+                            <div class="option-icon">💬</div>
+                            <div class="option-title">
+                                <h4>普通生成</h4>
+                                <span class="option-badge">对话式</span>
+                            </div>
+                        </div>
+                        <div class="option-description">
+                            <p>通过对话交流，逐步完善教案内容</p>
+                            <ul class="option-features">
+                                <li>✓ 灵活互动，随时调整</li>
+                                <li>✓ 支持模板上传</li>
+                                <li>✓ 可以多次修改</li>
+                                <li>✓ 导出为Word文档</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- 高级生成选项 -->
+                    <div class="generation-option-card" onclick="selectAdvancedGeneration()">
+                        <div class="option-header">
+                            <div class="option-icon">🚀</div>
+                            <div class="option-title">
+                                <h4>高级生成 (AI自动填充)</h4>
+                                <span class="option-badge" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">快速</span>
+                            </div>
+                        </div>
+                        <div class="option-description">
+                            <p>AI自动识别模板占位符，一键生成完整教案</p>
+                            <ul class="option-features">
+                                <li>✓ 快速生成（3-5分钟）</li>
+                                <li>✓ 自动填充所有字段</li>
+                                <li>✓ 默认模板库可选</li>
+                                <li>✓ 支持自定义模板</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 课程设置模态框 -->
+    <div class="modal" id="courseModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>课程设置</h3>
+                <button class="close-btn" onclick="closeModal('courseModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="courseSubject">课程名称</label>
+                    <input type="text" id="courseSubject" placeholder="例如：数据结构">
+                </div>
+                <div class="form-group">
+                    <label for="courseType">课程类型</label>
+                    <select id="courseType">
+                        <option value="专业课">专业课</option>
+                        <option value="公共课">公共课</option>
+                        <option value="选修课">选修课</option>
+                        <option value="实践课">实践课</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="totalLessons">总课时</label>
+                        <input type="number" id="totalLessons" value="16" min="1" max="64">
+                    </div>
+                    <div class="form-group">
+                        <label for="credits">学分</label>
+                        <input type="number" id="credits" value="3" min="1" max="10">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="major">专业</label>
+                    <input type="text" id="major" placeholder="例如：计算机科学与技术">
+                </div>
+                <div class="form-group">
+                    <label for="grade">年级</label>
+                    <select id="grade">
+                        <option value="本科">本科</option>
+                        <option value="专科">专科</option>
+                        <option value="研究生">研究生</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="requirements">特殊要求</label>
+                    <textarea id="requirements" placeholder="例如：融入思政元素，注重实践教学"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('courseModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveCourseSettings()">保存设置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- @高级生成 模态框 -->
+    <div class="modal" id="advancedGenerationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🚀 @高级生成 - AI自动填充教案模板</h3>
+                <button class="close-btn" onclick="closeModal('advancedGenerationModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="advanced-gen-intro">
+                    <p>🎯 <strong>功能说明：</strong></p>
+                    <ul>
+                        <li>上传您标注好的Word教案模板（包含 <code>{{占位符}}</code>）</li>
+                        <li>AI将自动识别所有占位符并生成对应内容</li>
+                        <li>根据您提供的主题生成专业、详细的教学内容</li>
+                        <li>自动填充并保持Word格式不变</li>
+                        <li>输出完整的教案文档供您下载</li>
+                    </ul>
+                    <p>⏱️ <strong>预计时间：</strong>3-5分钟</p>
+                </div>
+                
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label>
+                        📄 选择模板 <span style="color: #ef4444;">*</span>
+                    </label>
+                    
+                    <!-- 模板选择选项卡 -->
+                    <div style="display: flex; gap: 0.5rem; margin: 0.75rem 0;">
+                        <button type="button" class="template-tab active" id="defaultTemplateTab" onclick="switchTemplateTab('default')">
+                            📚 默认模板
+                        </button>
+                        <button type="button" class="template-tab" id="uploadTemplateTab" onclick="switchTemplateTab('upload')">
+                            📤 上传文件
+                        </button>
+                    </div>
+                    
+                    <!-- 默认模板列表 -->
+                    <div id="defaultTemplateSection" style="display: block;">
+                        <div id="defaultTemplateList" style="max-height: 200px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 0.5rem;">
+                            <p style="text-align: center; color: #9ca3af; padding: 1rem;">加载中...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 上传文件区域 -->
+                    <div id="uploadTemplateSection" style="display: none;">
+                        <div class="file-upload-area" id="advancedGenFileArea" style="padding: 1.5rem; border: 2px dashed #d1d5db; border-radius: 0.5rem; text-align: center; cursor: pointer; transition: all 0.3s;">
+                            <input 
+                                type="file" 
+                                id="advancedGenTemplate" 
+                                accept=".docx"
+                                style="display: none;"
+                                onchange="handleAdvancedGenTemplateUpload(this)"
+                            >
+                            <div id="advancedGenFilePrompt">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="margin: 0 auto 0.5rem; color: #9ca3af;">
+                                    <path d="M7 18C5.17107 18.4117 4 19.0443 4 19.7537C4 20.9943 7.58172 22 12 22C16.4183 22 20 20.9943 20 19.7537C20 19.0443 18.8289 18.4117 17 18M12 15L12 3M12 15L8 11M12 15L16 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <p style="margin: 0; color: #6b7280;">点击或拖拽上传Word模板（.docx）</p>
+                                <small style="color: #9ca3af;">模板中使用 {{placeholder}} 标记需要AI填充的位置</small>
+                            </div>
+                            <div id="advancedGenFileInfo" style="display: none;">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="margin: 0 auto 0.5rem; color: #10b981;">
+                                    <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <p style="margin: 0; color: #10b981; font-weight: 600;" id="advancedGenFileName"></p>
+                                <small style="color: #6b7280;" id="advancedGenFileSize"></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label for="advancedGenTopic">
+                        📚 教案主题 <span style="color: #ef4444;">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="advancedGenTopic" 
+                        placeholder="例如：Python列表推导式、市场营销中的SWOT分析、数据库的事务管理"
+                        style="font-size: 1rem; padding: 0.75rem;"
+                    >
+                    <small style="color: #6b7280; display: block; margin-top: 0.5rem;">
+                        💡 提示：请输入具体、明确的主题，AI将围绕此主题生成所有教学内容
+                    </small>
+                </div>
+                
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('advancedGenerationModal')">取消</button>
+                <button class="btn btn-primary" onclick="app.executeAdvancedGeneration()">
+                    🚀 开始生成
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载遮罩 -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="loadingText">处理中...</div>
+        </div>
+    </div>
+
+    <!-- 通知容器 -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=20251124b"></script>
+    <script>
+        // 全局变量
+        window.currentTemplateTab = 'default';
+        window.selectedDefaultTemplate = null;
+        
+        // 切换模板选择标签
+        function switchTemplateTab(tab) {
+            window.currentTemplateTab = tab;
+            
+            // 更新标签样式
+            document.getElementById('defaultTemplateTab').classList.toggle('active', tab === 'default');
+            document.getElementById('uploadTemplateTab').classList.toggle('active', tab === 'upload');
+            
+            // 显示/隐藏对应区域
+            document.getElementById('defaultTemplateSection').style.display = tab === 'default' ? 'block' : 'none';
+            document.getElementById('uploadTemplateSection').style.display = tab === 'upload' ? 'block' : 'none';
+        }
+        
+        // 选择默认模板
+        function selectDefaultTemplate(templateName) {
+            window.selectedDefaultTemplate = templateName;
+            
+            // 更新选中状态
+            document.querySelectorAll('.template-item').forEach(item => {
+                const isSelected = item.getAttribute('data-template-name') === templateName;
+                item.classList.toggle('selected', isSelected);
+                const checkmark = item.querySelector('.template-item-check');
+                if (checkmark) {
+                    checkmark.style.display = isSelected ? 'block' : 'none';
+                }
+            });
+        }
+        
+        // 显示教案生成选项
+        function showLessonGenerationOptions() {
+            app.showModal('lessonGenerationOptionsModal');
+        }
+        
+        // 选择普通生成
+        function selectNormalGeneration() {
+            app.closeModal('lessonGenerationOptionsModal');
+            app.startLessonMode();
+        }
+        
+        // 选择高级生成
+        function selectAdvancedGeneration() {
+            app.closeModal('lessonGenerationOptionsModal');
+            app.showAdvancedGenerationModal();
+        }
+        
+        // 检查登录状态并打开V5文档生成
+        function checkAuthAndOpenV5Generation() {
+            // 等待app初始化完成
+            if (!app) {
+                setTimeout(() => {
+                    checkAuthAndOpenV5Generation();
+                }, 100);
+                return;
+            }
+
+            // 检查是否有token和用户信息
+            const authToken = app.authToken || localStorage.getItem('auth_token');
+
+            if (!authToken || !app.currentUser) {
+                if (app.showNotification) {
+                    app.showNotification('请先登录使用V5智能生成', 'warning');
+                }
+
+                // 延迟后跳转到登录页
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 1000);
+                return;
+            }
+
+            // 已登录，跳转到V5生成页面
+            window.location.href = '/v5-generation';
+        }
+
+        // 检查登录状态并打开知识库
+        function checkAuthAndOpenKnowledgeBase() {
+            // 等待app初始化完成
+            if (!app) {
+                // 如果app还没初始化，等待一段时间再检查
+                setTimeout(() => {
+                    checkAuthAndOpenKnowledgeBase();
+                }, 100);
+                return;
+            }
+
+            // 检查是否有token和用户信息
+            const authToken = app.authToken || localStorage.getItem('auth_token');
+
+            if (!authToken || !app.currentUser) {
+                // 显示提示信息（在左上角显示）
+                if (app.showNotification) {
+                    app.showNotification('请先登录', 'warning');
+                }
+                
+                // 延迟跳转到登录页面，让用户看到提示
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 1000);
+                return;
+            }
+            
+            // 已登录，直接跳转
+            window.location.href = '/knowledge-base';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - EduAgent智教创想</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.svg') }}" type="image/svg+xml">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_layout.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Specific overrides or inline styles if needed */
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span>🎓 EduAgent</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a class="nav-item active" onclick="switchNav('home')">
+                    <span class="nav-icon">🏠</span> 首页
+                </a>
+                <a class="nav-item" id="nav-todo" onclick="switchNav('todo')" style="display: none;">
+                    <span class="nav-icon">📋</span> 待办反馈
+                </a>
+                <a class="nav-item" onclick="switchNav('activity')">
+                    <span class="nav-icon">🎭</span> 活动管理
+                </a>
+                <a class="nav-item" onclick="switchNav('users')">
+                    <span class="nav-icon">👥</span> 用户管理
+                </a>
+                <!-- Admin management hidden by default, visible via JS for super admins -->
+                <a class="nav-item" id="nav-admins" onclick="switchNav('admins')" style="display: none;">
+                    <span class="nav-icon">🛡️</span> 管理员管理
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-wrapper">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <span class="toggle-sidebar-btn">☰</span>
+                    <span class="breadcrumb" id="pageTitle">首页</span>
+                </div>
+                <div class="header-right">
+                    <span id="displayAdminUsername" style="font-weight: 500;"></span>
+                    <span class="role-badge" id="displayAdminRole"></span>
+                    <button class="btn btn-danger" onclick="logout()"
+                        style="padding: 4px 12px; font-size: 12px;">退出</button>
+                </div>
+            </header>
+
+            <!-- Content Body -->
+            <div class="content-body">
+
+                <!-- Home Section -->
+                <div id="section-home" class="section active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <h3>总用户数</h3>
+                                <div class="number" id="totalUsers">-</div>
+                            </div>
+                            <div class="stat-icon">👥</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <h3>激活用户</h3>
+                                <div class="number" id="activeUsers">-</div>
+                            </div>
+                            <div class="stat-icon">✅</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <h3>管理员数</h3>
+                                <div class="number" id="totalAdmins">-</div>
+                            </div>
+                            <div class="stat-icon">🛡️</div>
+                        </div>
+                    </div>
+
+                    <!-- Full-width stat cards row -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
+                        <!-- Pending Tasks Card -->
+                        <div class="stat-card" style="display: flex; align-items: center; padding: 20px 32px;">
+                            <div style="flex: 1;">
+                                <h3 style="margin-bottom: 12px;">待办任务</h3>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div style="text-align: center; cursor: pointer; flex: 1;"
+                                        onclick="goToFeedback('pending')">
+                                        <div class="number" id="pendingCount" style="font-size: 28px; color: #f5222d;">-
+                                        </div>
+                                        <div style="font-size: 12px; color: #999;">待处理</div>
+                                    </div>
+                                    <div style="text-align: center; cursor: pointer; flex: 1;"
+                                        onclick="goToFeedback('processing')">
+                                        <div class="number" id="processingCount"
+                                            style="font-size: 28px; color: #faad14;">-</div>
+                                        <div style="font-size: 12px; color: #999;">处理中</div>
+                                    </div>
+                                    <div style="text-align: center; cursor: pointer; flex: 1;"
+                                        onclick="goToFeedback('resolved')">
+                                        <div class="number" id="resolvedCount" style="font-size: 28px; color: #52c41a;">
+                                            -</div>
+                                        <div style="font-size: 12px; color: #999;">已完成</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="stat-icon" style="margin-left: 24px;">📋</div>
+                        </div>
+
+                        <!-- Activity Stats Card -->
+                        <div class="stat-card" style="display: flex; align-items: flex-start; padding: 20px 32px;">
+                            <div style="flex: 1;">
+                                <h3 style="margin-bottom: 12px;">活动数量</h3>
+                                <div style="display: flex; justify-content: space-around; align-items: center;">
+                                    <div style="text-align: center; cursor: pointer;" onclick="goToActivity('active')">
+                                        <div class="number" id="activeActivityCount"
+                                            style="font-size: 28px; color: #1677ff;">-</div>
+                                        <div style="font-size: 12px; color: #999;">活动中</div>
+                                    </div>
+                                    <div style="text-align: center; cursor: pointer;" onclick="goToActivity('ended')">
+                                        <div class="number" id="endedActivityCount"
+                                            style="font-size: 28px; color: #8c8c8c;">-</div>
+                                        <div style="font-size: 12px; color: #999;">已结束</div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f0f0;">
+                                    <span style="font-size: 12px; color: #666;">当前活动：</span>
+                                    <span id="currentActivityName"
+                                        style="font-size: 13px; color: #1677ff; font-weight: 500;">-</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon" style="margin-left: 24px;">🎭</div>
+                        </div>
+                    </div>
+
+                    <!-- Charts or other dash widgets -->
+                    <!-- Charts -->
+                    <!-- Charts Section -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
+                        <!-- Left Chart: AI Interactions & active users -->
+                        <div class="card">
+                            <div class="card-header-actions"
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h3>数据统计</h3>
+                                <div class="chart-controls" style="display: flex; gap: 8px; align-items: center;">
+                                    <select id="statsChartDays" onchange="switchChartType(currentChartType)"
+                                        style="padding: 4px 8px; border-radius: 4px; border: 1px solid #d9d9d9; font-size: 12px;">
+                                        <option value="7">最近7天</option>
+                                        <option value="30">最近30天</option>
+                                        <option value="365">最近1年</option>
+                                    </select>
+                                    <button class="btn btn-sm btn-outline active"
+                                        onclick="switchChartType('interactions')"
+                                        id="btn-chart-interactions">AI交互</button>
+                                    <button class="btn btn-sm btn-outline" onclick="switchChartType('active_users')"
+                                        id="btn-chart-users">日活跃用户</button>
+                                </div>
+                            </div>
+                            <div class="chart-container" style="position: relative; height: 350px; width: 100%;">
+                                <canvas id="statsChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Right Chart: Daily Revenue -->
+                        <div class="card">
+                            <div class="card-header-actions"
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h3>每日流水</h3>
+                                <div class="chart-controls">
+                                    <select id="revenueChartDays" onchange="loadRevenueChart()"
+                                        style="padding: 4px 8px; border-radius: 4px; border: 1px solid #d9d9d9; font-size: 12px;">
+                                        <option value="7">最近7天</option>
+                                        <option value="30">最近30天</option>
+                                        <option value="365">最近1年</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="chart-container" style="position: relative; height: 350px; width: 100%;">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Todo/Feedback Section -->
+                <div id="section-todo" class="section">
+                    <div class="card">
+                        <div class="card-header-actions"
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3>待办反馈 (To-Do)</h3>
+                            <div class="status-filters">
+                                <button class="btn btn-sm btn-outline active"
+                                    onclick="filterFeedbacks('all')">全部</button>
+                                <button class="btn btn-sm btn-outline" onclick="filterFeedbacks('pending')">待处理</button>
+                                <button class="btn btn-sm btn-outline"
+                                    onclick="filterFeedbacks('processing')">处理中</button>
+                                <button class="btn btn-sm btn-outline"
+                                    onclick="filterFeedbacks('resolved')">已处理</button>
+                            </div>
+                        </div>
+                        <div id="feedbacksTableContainer">
+                            <div class="loading">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Section -->
+                <div id="section-activity" class="section">
+                    <div class="card">
+                        <h3>活动管理</h3>
+                        <p style="padding: 20px 0; color: #666;">活动管理功能开发中...</p>
+                    </div>
+                </div>
+
+                <!-- Users Section -->
+                <div id="section-users" class="section">
+                    <div class="card">
+                        <div class="search-bar">
+                            <input type="text" id="userSearch" placeholder="搜索用户（用户名、邮箱、姓名）">
+                            <button class="btn btn-primary" onclick="searchUsers()">搜索</button>
+                            <button class="btn btn-success" onclick="showCreateUserModal()">添加用户</button>
+                        </div>
+                        <div id="usersTableContainer">
+                            <div class="loading">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admins Section -->
+                <div id="section-admins" class="section">
+                    <div class="card">
+                        <div style="margin-bottom: 20px;">
+                            <button class="btn btn-success" id="addAdminBtn"
+                                onclick="showCreateAdminModal()">添加管理员</button>
+                        </div>
+                        <div id="adminsTableContainer">
+                            <div class="loading">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals (Copied from previous version) -->
+    <!-- 创建/编辑用户模态框 -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <h2 id="userModalTitle">添加用户</h2>
+            <form id="userForm">
+                <input type="hidden" id="userId">
+                <div class="form-group">
+                    <label>用户名 *</label>
+                    <input type="text" id="userUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>邮箱 *</label>
+                    <input type="email" id="userEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>全名</label>
+                    <input type="text" id="userFullName">
+                </div>
+                <div class="form-group">
+                    <label>密码 <span id="passwordHint">(留空则不修改)</span></label>
+                    <input type="password" id="userPassword">
+                </div>
+                <div class="form-group">
+                    <label>状态</label>
+                    <select id="userActive">
+                        <option value="true">激活</option>
+                        <option value="false">禁用</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>角色</label>
+                    <select id="userRole">
+                        <option value="false">普通用户</option>
+                        <option value="true">管理员</option>
+                    </select>
+                </div>
+                <div class="error-message" id="userFormError"></div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn" onclick="closeUserModal()">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 创建管理员模态框 -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <h2>添加管理员</h2>
+            <form id="adminForm">
+                <div class="form-group">
+                    <label>用户名 *</label>
+                    <input type="text" id="adminUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>邮箱</label>
+                    <input type="email" id="adminEmail">
+                </div>
+                <div class="form-group">
+                    <label>密码 *</label>
+                    <input type="password" id="adminPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>角色 *</label>
+                    <select id="adminRole">
+                        <option value="admin">管理员</option>
+                        <option value="super_admin">高级管理员</option>
+                    </select>
+                </div>
+                <div class="error-message" id="adminFormError"></div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary">创建</button>
+                    <button type="button" class="btn" onclick="closeAdminModal()">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 积分管理模态框 -->
+    <div id="pointsModal" class="modal">
+        <div class="modal-content">
+            <h2>管理用户积分</h2>
+            <form id="pointsForm">
+                <input type="hidden" id="pointsUserId">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="pointsUsername" readonly style="background: #f5f5f5;">
+                </div>
+                <div class="form-group">
+                    <label>当前积分</label>
+                    <input type="text" id="currentPoints" readonly
+                        style="background: #f5f5f5; font-weight: bold; color: #4caf50;">
+                </div>
+                <div class="form-group">
+                    <label>操作类型</label>
+                    <select id="pointsAction">
+                        <option value="set">设置为指定值</option>
+                        <option value="add">增加积分</option>
+                        <option value="subtract">扣减积分</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>积分数量 *</label>
+                    <input type="number" id="pointsAmount" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label>备注原因</label>
+                    <input type="text" id="pointsReason" placeholder="管理员调整">
+                </div>
+                <div class="error-message" id="pointsFormError"></div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary">确认</button>
+                    <button type="button" class="btn" onclick="closePointsModal()">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/admin_dashboard.js') }}"></script>
+</body>
+
+</html>

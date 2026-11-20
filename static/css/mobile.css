@@ -1,0 +1,325 @@
+/* 移动端专用覆盖样式：避免错位与溢出 */
+
+html, body {
+    height: auto;
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-text-size-adjust: 100%;
+}
+
+/* 导航与布局尺寸优化 */
+.top-navbar {
+    height: 56px;
+    padding: 0 12px;
+}
+
+.logo-text {
+    font-size: 1rem;
+}
+
+.navbar-right .auth-btn {
+    padding: 8px 12px;
+    min-width: 64px;
+    font-size: 13px;
+}
+
+.nav-btn {
+    width: 32px;
+    height: 32px;
+}
+
+/* 主区域：精确高度，避免底部被遮挡 */
+.main-chat-area {
+    position: relative;
+    top: 56px;
+    bottom: auto;
+    min-height: calc(100vh - 56px - 100px);
+}
+
+.chat-messages {
+    padding: 12px;
+    max-width: 100%;
+    overflow-y: visible !important;
+}
+
+.message {
+    gap: 12px;
+    max-width: 96%;
+}
+
+.message-content {
+    padding: 12px;
+    max-width: 90vw;
+}
+
+.message-text {
+    font-size: 0.95rem;
+}
+
+/* 底部输入区：iOS安全区及键盘兼容 */
+.bottom-input-area {
+    height: 100px;
+    padding: 10px 12px;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+    backdrop-filter: blur(6px);
+}
+
+.input-container {
+    max-width: 100%;
+    padding: 0 4px;
+}
+
+.input-wrapper {
+    gap: 8px;
+    padding: 10px;
+}
+
+.chat-input {
+    font-size: 16px; /* iOS 防缩放 */
+    max-height: 96px;
+}
+
+.send-btn {
+    width: 40px;
+    height: 40px;
+}
+
+/* 模态框尺寸在手机上更紧凑 */
+.modal-content {
+    width: 96% !important;
+    max-height: 80vh !important;
+}
+
+/* 欢迎页布局改为单列并减小间距 */
+.welcome-content {
+    padding: 0 12px;
+}
+
+.welcome-content h1 {
+    font-size: 1.75rem !important;
+}
+
+.welcome-features {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    padding: 12px !important;
+}
+
+/* 去除阻止滚动的固定定位，确保整页可滚动 */
+
+/* 安卓浏览器地址栏伸缩兼容 */
+@media (max-width: 768px) {
+    .chat-messages {
+        min-height: 0;
+    }
+    
+    /* ========== 个人资料页面移动端适配 ========== */
+    
+    /* 主布局：从左右布局改为上下布局 */
+    main[style*="display: flex"] {
+        flex-direction: column !important;
+        margin-top: 56px !important;
+        height: auto !important;
+        min-height: calc(100vh - 56px) !important;
+        overflow-y: auto !important;
+    }
+    
+    /* 侧边栏：在移动端改为横向滚动标签栏 */
+    aside.generation-option-card {
+        width: 100% !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    aside.generation-option-card > div:first-child {
+        display: none; /* 隐藏"设置"标题 */
+    }
+    
+    aside.generation-option-card nav {
+        flex-direction: row !important;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+        padding: 0 !important;
+    }
+    
+    aside.generation-option-card nav button {
+        flex: 0 0 auto;
+        min-width: 100px;
+        border-radius: 0 !important;
+        border-bottom: 3px solid transparent !important;
+        border-right: none !important;
+        padding: 12px 16px !important;
+        font-size: 14px;
+    }
+    
+    aside.generation-option-card nav button:hover,
+    aside.generation-option-card nav button:focus,
+    aside.generation-option-card nav button.active {
+        border-bottom-color: #6366f1 !important;
+        background-color: rgba(99, 102, 241, 0.05);
+    }
+    
+    /* 主内容区域 */
+    main > div[style*="flex: 1"] {
+        padding: 16px !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+    
+    main > div[style*="flex: 1"] h1 {
+        font-size: 1.5rem !important;
+        margin: 0 0 16px 0 !important;
+    }
+    
+    /* 表单布局：双列改为单列 */
+    .form-row {
+        display: flex;
+        flex-direction: column !important;
+        gap: 16px;
+    }
+    
+    .form-group {
+        width: 100% !important;
+        margin-bottom: 0 !important;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        font-size: 16px; /* 防止iOS自动放大 */
+    }
+    
+    /* 头像上传区域优化 */
+    #avatar-preview {
+        width: 64px !important;
+        height: 64px !important;
+    }
+    
+    #uploadAvatarBtn {
+        font-size: 14px;
+        padding: 8px 16px !important;
+    }
+    
+    /* 生成选项卡片间距优化 */
+    .generation-option-card {
+        margin-bottom: 12px !important;
+        padding: 16px !important;
+        border-radius: 12px !important;
+    }
+    
+    .generation-option-card h3 {
+        font-size: 1.125rem !important;
+    }
+    
+    /* 按钮组优化 */
+    main button.btn {
+        font-size: 15px;
+        padding: 10px 20px;
+    }
+    
+    /* 头像裁剪对话框适配 */
+    dialog#avatar-crop-modal {
+        width: 95% !important;
+        max-width: 95% !important;
+        max-height: 90vh;
+        margin: auto;
+    }
+    
+    dialog#avatar-crop-modal > div {
+        padding: 16px !important;
+    }
+    
+    dialog#avatar-crop-modal h3 {
+        font-size: 1.125rem !important;
+    }
+    
+    #crop-image {
+        max-height: 300px !important;
+    }
+    
+    .cropper-container {
+        max-height: 300px !important;
+    }
+    
+    dialog#avatar-crop-modal button.btn {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+    
+    /* 会话管理列表优化 */
+    .template-item {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 12px;
+    }
+    
+    .template-item-info {
+        width: 100%;
+    }
+    
+    .template-item button {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .template-item-details {
+        font-size: 13px;
+    }
+    
+    .template-item-size {
+        font-size: 12px !important;
+        line-height: 1.4;
+    }
+    
+    /* 成功/错误提示优化 */
+    .success-message,
+    .error-message {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+    
+    /* 顶部导航栏"返回首页"按钮在移动端显示为图标 */
+    .navbar-right .auth-btn {
+        min-width: auto;
+    }
+}
+
+/* 小屏幕额外优化 */
+@media (max-width: 480px) {
+    aside.generation-option-card nav button {
+        min-width: 85px;
+        padding: 10px 12px !important;
+        font-size: 13px;
+    }
+    
+    main > div[style*="flex: 1"] {
+        padding: 12px !important;
+    }
+    
+    .generation-option-card {
+        padding: 12px !important;
+    }
+    
+    dialog#avatar-crop-modal > div {
+        padding: 12px !important;
+    }
+    
+    #crop-image {
+        max-height: 250px !important;
+    }
+    
+    .cropper-container {
+        max-height: 250px !important;
+    }
+}
+
+

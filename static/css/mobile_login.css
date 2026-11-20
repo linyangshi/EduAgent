@@ -1,0 +1,246 @@
+/* Mobile Login Styles - Premium Aesthetics */
+:root {
+    --primary-gradient: #f4f7f9;
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --input-bg: #f5f7f9;
+    --accent-blue: #5b5dfa;
+    --text-main: #333d47;
+    --text-muted: #8e99a3;
+    --shadow-soft: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, sans-serif;
+}
+
+body {
+    background: var(--primary-gradient);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    color: var(--text-main);
+}
+
+.brand-header {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: fadeInDown 0.8s ease;
+}
+
+.logo-container {
+    width: 100px;
+    height: 100px;
+    background: #fff;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.logo-container img {
+    width: 70%;
+    height: auto;
+}
+
+.brand-name {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.welcome-msg {
+    font-size: 15px;
+    color: var(--text-muted);
+}
+
+.login-card {
+    background: var(--card-bg);
+    width: 100%;
+    max-width: 400px;
+    border-radius: 28px;
+    padding: 32px;
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(10px);
+    animation: fadeInUp 0.8s ease;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 18px;
+}
+
+input {
+    width: 100%;
+    padding: 16px 16px 16px 48px;
+    background: var(--input-bg);
+    border: 1px solid transparent;
+    border-radius: 16px;
+    font-size: 16px;
+    color: var(--text-main);
+    transition: all 0.3s ease;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(91, 93, 250, 0.1);
+}
+
+.agreement-section {
+    margin: 16px 0 20px;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.agreement-label {
+    display: flex;
+    align-items: center;
+    gap: 6px; /* 紧凑间距 */
+    color: #888;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* 隐藏原生勾选框 */
+.custom-checkbox {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.custom-checkbox input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+/* 自定义勾选框外观 - 改为圆形以消除“复选框”感 */
+.checkmark {
+    position: absolute;
+    top: 1px;
+    left: 0;
+    height: 16px;
+    width: 16px;
+    background-color: #fff;
+    border: 1.5px solid #d1d5db;
+    border-radius: 50%; /* 圆形 */
+    transition: all 0.2s ease;
+}
+
+/* 悬停效果 */
+.agreement-label:hover input ~ .checkmark {
+    border-color: var(--accent-blue);
+}
+
+/* 选中后的背景色 */
+.custom-checkbox input:checked ~ .checkmark {
+    background-color: var(--accent-blue);
+    border-color: var(--accent-blue);
+}
+
+/* 勾选符号 (对号) */
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+/* 选中后显示对号 */
+.custom-checkbox input:checked ~ .checkmark:after {
+    display: block;
+}
+
+/* 对号样式 - 微调位置适应圆形 */
+.custom-checkbox .checkmark:after {
+    left: 5px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.agreement-label a {
+    color: var(--accent-blue);
+    text-decoration: none;
+    font-weight: 500;
+    margin: 0 2px;
+}
+
+.forgot-link-container {
+    text-align: right;
+    margin-bottom: 24px;
+}
+
+.forgot-link {
+    color: var(--accent-blue);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 18px;
+    background: var(--accent-blue);
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(91, 93, 250, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-btn:active {
+    transform: scale(0.98);
+    box-shadow: 0 5px 10px rgba(91, 93, 250, 0.3);
+}
+
+.bottom-tip {
+    margin-top: 40px;
+    font-size: 15px;
+    color: var(--text-muted);
+}
+
+.register-link {
+    color: var(--accent-blue);
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+/* Animations */
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}

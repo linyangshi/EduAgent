@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识库管理 - EduAgent智教创想</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
+    <script src="{{ url_for('static', filename='js/auth_sync.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/mobile_nav.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% if is_mobile %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
+    {% endif %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/new_frontend.css') }}">
+    <style>
+        :root {
+            --primary-color: #1677ff;
+            --primary-hover: #4096ff;
+            --bg-gradient: linear-gradient(135deg, #f0f2f5 0%, #e6f4ff 100%);
+            --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+            --card-hover-shadow: 0 16px 48px rgba(22, 119, 255, 0.12);
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Inter", sans-serif;
+            display: flex;
+            flex-direction: row;
+            overflow: hidden;
+            color: var(--text-primary);
+        }
+
+        .main-content-scroll-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            height: 100vh;
+            padding: 2rem 3rem;
+            position: relative;
+        }
+
+        .header {
+            max-width: 1200px;
+            margin: 0 auto 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .back-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            background: rgba(0, 0, 0, 0.03);
+            color: var(--primary-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+            padding: 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #334155;
+            letter-spacing: -0.02em;
+            margin: 0;
+        }
+
+        .create-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 0.8rem 1.8rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(22, 119, 255, 0.25);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .create-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(22, 119, 255, 0.35);
+        }
+
+        .kb-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .kb-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 1.8rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-height: 180px;
+        }
+
+        .kb-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: var(--card-hover-shadow);
+            transform: translateY(-4px);
+        }
+
+        .kb-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.8rem;
+        }
+
+        .kb-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0 0 0.5rem 0;
+            line-height: 1.4;
+        }
+
+        .kb-description {
+            font-size: 0.95rem;
+            color: #64748b;
+            margin: 0;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+            flex: 1;
+        }
+
+        .kb-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 1.2rem;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .kb-stats {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            font-weight: 500;
+            background: #f8fafc;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .kb-date {
+            font-size: 0.85rem;
+            color: #cbd5e1;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 1.2rem;
+            right: 1.2rem;
+            background: transparent;
+            border: none;
+            color: #cbd5e1;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .delete-btn:hover {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        .nav-icon {
+            font-size: 1.1rem;
+            width: 24px;
+            display: inline-flex;
+            justify-content: center;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 6rem 2rem;
+            color: #94a3b8;
+        }
+
+        .empty-icon {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
+            filter: grayscale(1);
+        }
+
+        /* Modal Styling Matches */
+        /* Modal styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 2.5rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: none;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+            letter-spacing: -0.02em;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 0;
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            background: #f8fafc;
+            color: var(--text-primary);
+            box-sizing: border-box;
+            /* Ensure padding doesn't affect width */
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(22, 119, 255, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2.5rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.8rem;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(22, 119, 255, 0.2);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 768px) {
+            .main-content-scroll-wrapper {
+                padding: 1.5rem;
+            }
+
+            .container {
+                padding: 1.5rem;
+                margin-top: 1rem;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Premium Floating Feedback Button */
+        .floating-feedback-btn {
+            position: fixed;
+            right: 30px;
+            bottom: 30px;
+            height: 52px;
+            min-width: 52px;
+            background: linear-gradient(135deg, #1677ff 0%, #4096ff 100%);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: white !important;
+            border-radius: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(22, 119, 255, 0.3);
+            text-decoration: none !important;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+            cursor: pointer;
+            padding: 0 16px;
+            overflow: hidden;
+            animation: fb-float 3s ease-in-out infinite;
+        }
+
+        @keyframes fb-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .floating-feedback-btn i {
+            font-size: 20px;
+            margin: 0;
+            transition: transform 0.3s ease;
+            color: white !important;
+        }
+
+        .fb-text {
+            max-width: 0;
+            opacity: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            font-weight: 600;
+            font-size: 14px;
+            margin-left: 0;
+            color: white !important;
+        }
+
+        .floating-feedback-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 40px rgba(22, 119, 255, 0.4);
+            color: white !important;
+            animation-play-state: paused;
+        }
+
+        .floating-feedback-btn:hover .fb-text {
+            max-width: 100px;
+            opacity: 1;
+            margin-left: 10px;
+        }
+
+        .floating-feedback-btn:hover i {
+            transform: rotate(15deg);
+        }
+
+        @media (max-width: 768px) {
+            .floating-feedback-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body data-is-logged-in="{% if current_user.is_authenticated %}true{% else %}false{% endif %}">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <!-- New Task Button (Top Left Box) -->
+        <div class="sidebar-header">
+            <button class="new-task-btn" onclick="window.location.href='/app'">
+                <span class="plus-icon">+</span> 新任务
+            </button>
+        </div>
+
+        <!-- Functional Navigation (Left Middle Box) -->
+        <nav class="sidebar-nav">
+            <a href="/v5-generation" class="nav-item">
+                <span class="nav-icon"><i class="fas fa-file-contract"></i></span> 文档生成
+            </a>
+            <a href="/blackboard-design" class="nav-item">
+                <span class="nav-icon"><i class="fas fa-chalkboard"></i></span> 板书设计
+            </a>
+            <a href="/app" class="nav-item">
+                <span class="nav-icon"><i class="fas fa-comment-dots"></i></span> 智能对话
+            </a>
+            <a href="/ai-editor" class="nav-item">
+                <span class="nav-icon"><i class="fas fa-edit"></i></span> AI编辑器
+            </a>
+        </nav>
+
+        <!-- Chat History List placeholder (optional, can be populated via JS if shared logic exists) -->
+        <div class="sidebar-history">
+            <div class="history-label">近期任务</div>
+            <div class="history-list" id="historyList">
+                <!-- History items would be injected here -->
+            </div>
+        </div>
+
+        <!-- User Profile (Left Bottom Box) -->
+            <div class="sidebar-footer">
+                <!-- Authenticated State -->
+                <a href="/profile" class="user-profile"
+                    style="{% if not current_user.is_authenticated %}display: none;{% endif %} text-decoration: none; align-items: center; width: 100%;">
+                    <div class="user-avatar-container" style="position: relative; width: 32px; height: 32px;">
+                        {% if current_user.is_authenticated and current_user.avatar_url %}
+                        <img src="{{ current_user.avatar_url }}" alt="Avatar" class="user-avatar"
+                            onerror="this.style.display='none'; document.getElementById('sidebar-avatar-fallback').style.display='flex';"
+                            style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        <div id="sidebar-avatar-fallback" class="user-avatar"
+                            style="display:none;align-items:center;justify-content:center;background:linear-gradient(135deg, #1677ff 0%, #4096ff 100%);color:white;font-size:14px;font-weight:600;width:100%;height:100%;border-radius:50%;">
+                            {{ current_user.username[0] | upper }}
+                        </div>
+                        {% elif current_user.is_authenticated %}
+                        <div class="user-avatar"
+                            style="display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, #1677ff 0%, #4096ff 100%);color:white;font-size:14px;font-weight:600;width:100%;height:100%;border-radius:50%;">
+                            {{ current_user.username[0] | upper }}
+                        </div>
+                        {% else %}
+                        <div class="user-avatar" style="display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, #1677ff 0%, #4096ff 100%);color:white;font-size:14px;font-weight:600;width:100%;height:100%;border-radius:50%;">?</div>
+                        {% endif %}
+                    </div>
+                    <span class="user-name">{{ current_user.username if current_user.is_authenticated else '用户' }}</span>
+                </a>
+
+                <!-- Guest State -->
+                <div class="guest-only" style="{% if current_user.is_authenticated %}display: none;{% endif %} gap: 8px; width: 100%;">
+                    <a href="/login"
+                        style="flex: 1; padding: 8px 12px; background: linear-gradient(135deg, #1677ff 0%, #4096ff 100%); color: white; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 500; text-align: center;">登录</a>
+                    <a href="/register"
+                        style="flex: 1; padding: 8px 12px; background: #f3f4f6; color: #374151; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 500; text-align: center; border: 1px solid #e5e7eb;">注册</a>
+                </div>
+            </div>
+    </aside>
+
+    <div class="main-content-scroll-wrapper">
+        <div class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <div style="width: 32px; height: 32px; background: white; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 3px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                        <img src="/static/images/favicon.svg" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;">
+                    </div>
+                    <span>知识库管理</span>
+                </div>
+            </div>
+            <a href="/" class="back-link">
+                <i class="fas fa-arrow-left" style="margin-right: 6px;"></i>返回首页
+            </a>
+        </div>
+
+        <div class="container">
+            <div class="page-header" style="display: flex; align-items: center; justify-content: flex-start; gap: 2rem;">
+                <h1 class="page-title" id="mainTitle">公共知识库</h1>
+                <div class="kb-tabs" style="display: flex; gap: 1rem; flex: 1;">
+                    <button class="btn btn-primary" id="tabPublic" onclick="switchTab('public')" style="padding: 0.5rem 1.2rem;">公共知识库</button>
+                    <button class="btn btn-secondary" id="tabPrivate" onclick="switchTab('private')" style="padding: 0.5rem 1.2rem;">我的知识库</button>
+                </div>
+                <button class="create-btn" onclick="showCreateModal(); console.log('🔘 创建按钮被点击');">+ 创建知识库</button>
+            </div>
+
+            <div class="kb-grid" id="kbGrid">
+                <div class="empty-state">
+                    <div class="empty-icon"><i class="fas fa-book-open" style="font-size: 3.5rem; color: #cbd5e1;"></i></div>
+                    <div>暂无知识库，点击上方按钮创建第一个知识库</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 创建知识库模态框 -->
+        <div class="modal" id="createModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">创建知识库</h2>
+                    <button class="close-btn" onclick="closeCreateModal()">&times;</button>
+                </div>
+                <form id="createForm" onsubmit="createKnowledgeBase(event)">
+                    <div class="form-group">
+                        <label class="form-label">知识库名称 *</label>
+                        <input type="text" class="form-input" id="kbName" required placeholder="例如：数据结构课程资料">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">描述（可选）</label>
+                        <textarea class="form-input form-textarea" id="kbDescription"
+                            placeholder="简要描述这个知识库的用途"></textarea>
+                    </div>
+                    {% if current_user.is_authenticated and current_user.is_admin %}
+                    <div class="form-group">
+                        <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: normal;">
+                            <input type="checkbox" id="kbIsPublic" style="width: 1.2rem; height: 1.2rem;"> 设为公共知识库（所有用户可见）
+                        </label>
+                    </div>
+                    {% endif %}
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeCreateModal()">取消</button>
+                        <button type="submit" class="btn btn-primary">创建</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            // 页面加载时获取知识库列表
+            document.addEventListener('DOMContentLoaded', function () {
+                loadKnowledgeBases();
+            });
+
+            // 当前用户ID
+            const currentUserId = {% if current_user.is_authenticated %}{{ current_user.id }}{% else %}null{% endif %};
+            
+            // 当前选中的标签页
+            let currentTab = 'public';
+            
+            function switchTab(tab) {
+                currentTab = tab;
+                document.getElementById('tabPrivate').className = tab === 'private' ? 'btn btn-primary' : 'btn btn-secondary';
+                document.getElementById('tabPublic').className = tab === 'public' ? 'btn btn-primary' : 'btn btn-secondary';
+                document.getElementById('mainTitle').innerText = tab === 'private' ? '我的知识库' : '公共知识库';
+                loadKnowledgeBases();
+            }
+
+            // 加载知识库列表
+            async function loadKnowledgeBases() {
+                try {
+                    // 获取认证token
+                    const authToken = sessionStorage.getItem('auth_token');
+                    const headers = {};
+                    if (authToken) {
+                        headers['Authorization'] = `Bearer ${authToken}`;
+                    }
+
+                    const response = await fetch(`/api/kb/list?type=${currentTab}`, {
+                        headers: headers
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        renderKnowledgeBases(result.knowledge_bases);
+                    } else {
+                        console.error('加载知识库列表失败:', result.error);
+                        // 如果是认证失败，跳转到登录页
+                        if (response.status === 401) {
+                            window.location.href = '/login';
+                        }
+                    }
+                } catch (error) {
+                    console.error('加载知识库列表失败:', error);
+                }
+            }
+
+            // 渲染知识库列表
+            function renderKnowledgeBases(kbs) {
+                const grid = document.getElementById('kbGrid');
+
+                if (kbs.length === 0) {
+                    grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <div class="empty-icon" style="background: white; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; border: 1px solid #e2e8f0; box-shadow: 0 8px 20px rgba(0,0,0,0.05); overflow: hidden; padding: 12px;">
+                            <img src="/static/images/favicon.svg" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;">
+                        </div>
+                        <div>暂无知识库，点击上方按钮创建第一个知识库</div>
+                    </div>
+                `;
+                    return;
+                }
+
+                grid.innerHTML = kbs.map(kb => {
+                    const date = new Date(kb.created_at);
+                    const dateStr = date.toLocaleDateString('zh-CN');
+                    const isOwner = kb.user_id === currentUserId;
+                    
+                    const deleteBtnHtml = isOwner ? `
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteKnowledgeBase(${kb.id})" title="删除">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    ` : '';
+
+                    return `
+                    <div class="kb-card" onclick="openKnowledgeBase(${kb.id})">
+                        ${deleteBtnHtml}
+                        <div class="kb-card-header">
+                            <h3 class="kb-name">${escapeHtml(kb.name)}</h3>
+                        </div>
+                        ${kb.description ? `<p class="kb-description">${escapeHtml(kb.description)}</p>` : ''}
+                        <div class="kb-meta">
+                            <span class="kb-stats">${kb.file_count || 0}个文档</span>
+                            <span class="kb-date">${dateStr}</span>
+                        </div>
+                    </div>
+                `;
+                }).join('');
+            }
+
+            // 打开知识库
+            function openKnowledgeBase(kbId) {
+                checkLoginAndRedirect(`/knowledge-base/${kbId}`, '访问知识库前请先登录');
+            }
+
+            // 删除知识库
+            async function deleteKnowledgeBase(kbId) {
+                if (!confirm('确定要删除这个知识库吗？此操作将删除所有相关文件和数据，且无法恢复。')) {
+                    return;
+                }
+
+                try {
+                    // 获取认证token
+                    const authToken = sessionStorage.getItem('auth_token');
+                    const headers = {
+                        'X-CSRFToken': getCSRFToken()
+                    };
+                    if (authToken) {
+                        headers['Authorization'] = `Bearer ${authToken}`;
+                    }
+
+                    const response = await fetch(`/api/kb/${kbId}`, {
+                        method: 'DELETE',
+                        headers: headers
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        loadKnowledgeBases(); // 重新加载列表
+                    } else {
+                        alert(`删除失败: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error('删除知识库失败:', error);
+                    alert(`删除失败: ${error.message}`);
+                }
+            }
+
+            // 显示创建模态框
+            function showCreateModal() {
+                console.log('🔍 showCreateModal 被调用');
+                const modal = document.getElementById('createModal');
+                if (!modal) {
+                    console.error('❌ 找不到 createModal 元素');
+                    alert('无法找到创建弹窗，请刷新页面重试');
+                    return;
+                }
+                console.log('✅ 找到模态框元素，添加 active 类');
+                modal.classList.add('active');
+                console.log('✅ 模态框类名:', modal.className);
+                // 验证模态框是否真的显示了
+                setTimeout(() => {
+                    const computedStyle = window.getComputedStyle(modal);
+                    console.log('📊 模态框显示状态:', computedStyle.display);
+                    console.log('📊 模态框可见性:', computedStyle.visibility);
+                }, 100);
+            }
+
+            // 关闭创建模态框
+            function closeCreateModal() {
+                document.getElementById('createModal').classList.remove('active');
+                document.getElementById('createForm').reset();
+            }
+
+            // 创建知识库
+            async function createKnowledgeBase(event) {
+                event.preventDefault();
+                console.log('🔍 createKnowledgeBase 被调用');
+
+                const name = document.getElementById('kbName').value.trim();
+                const description = document.getElementById('kbDescription').value.trim();
+
+                console.log('📝 表单数据:', { name, description });
+
+                if (!name) {
+                    alert('请输入知识库名称');
+                    return;
+                }
+
+                try {
+                    console.log('📤 发送创建请求到 /api/kb/create');
+
+                    // 获取认证token
+                    const authToken = sessionStorage.getItem('auth_token');
+                    console.log('🔑 认证Token:', authToken ? '已获取' : '未找到');
+
+                    const headers = {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    };
+
+                    // 如果有token，添加Authorization头
+                    if (authToken) {
+                        headers['Authorization'] = `Bearer ${authToken}`;
+                    }
+
+                    const response = await fetch('/api/kb/create', {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify({
+                            name: name,
+                            description: description,
+                            is_public: document.getElementById('kbIsPublic').checked
+                        })
+                    });
+
+                    console.log('📥 收到响应，状态码:', response.status);
+                    const result = await response.json();
+                    console.log('📥 响应数据:', result);
+
+                    if (result.success) {
+                        console.log('✅ 创建成功');
+                        closeCreateModal();
+                        loadKnowledgeBases(); // 重新加载列表
+                    } else {
+                        console.error('❌ 创建失败:', result.error);
+                        alert(`创建失败: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error('❌ 创建知识库失败:', error);
+                    alert(`创建失败: ${error.message}`);
+                }
+            }
+
+            // 工具函数
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            function getCSRFToken() {
+                const name = 'csrf_token';
+                const value = '; ' + document.cookie;
+                const parts = value.split('; ' + name + '=');
+                if (parts.length === 2) return parts.pop().split(';').shift();
+                return '';
+            }
+
+            // 点击模态框外部关闭
+            document.getElementById('createModal').addEventListener('click', function (e) {
+                if (e.target === this) {
+                    closeCreateModal();
+                }
+            });
+        </script>
+    <a href="/feedback" class="floating-feedback-btn">
+        <i class="fas fa-comment-dots"></i>
+        <span class="fb-text">意见反馈</span>
+    </a>
+</body>
+
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI文档编辑器</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai_editor.css') }}">
+</head>
+<body>
+    <div class="editor-app">
+        <!-- 顶部工具栏 -->
+        <header class="toolbar">
+            <div class="toolbar-left">
+                <div class="logo">
+                    <span class="logo-icon">🧠</span>
+                    <span class="logo-text">AI文档编辑器</span>
+                </div>
+                <div class="file-name" id="fileName" style="display: none;">未命名文档</div>
+            </div>
+
+            <div class="toolbar-center">
+                <div class="format-tools" id="formatTools" style="display: none;">
+                    <div class="font-controls">
+                        <select class="tool-select" id="fontFamilySelect" title="选择字体">
+                            <option value="">字体</option>
+                            <option value="SimSun">宋体 (SimSun)</option>
+                            <option value="KaiTi">楷体 (KaiTi)</option>
+                            <option value="FangSong">仿宋 (FangSong)</option>
+                            <option value="SimHei">黑体 (SimHei)</option>
+                            <option value="Microsoft YaHei">微软雅黑</option>
+                            <option value="Times New Roman">Times New Roman</option>
+                        </select>
+                        <select class="tool-select" id="fontSizeSelect" title="选择字号">
+                            <option value="">字号</option>
+                            <option value="10.5">小五 (10.5pt)</option>
+                            <option value="12">小四 (12pt)</option>
+                            <option value="14">四号 (14pt)</option>
+                            <option value="16">三号 (16pt)</option>
+                            <option value="18">二号 (18pt)</option>
+                            <option value="24">初号 (24pt)</option>
+                        </select>
+                        <button class="tool-btn text-btn" id="matchPrevFormatBtn" title="匹配上一段格式">
+                            同上一段
+                        </button>
+                    </div>
+                    <button class="tool-btn" data-command="bold" title="粗体 (Ctrl+B)">
+                        <strong>B</strong>
+                    </button>
+                    <button class="tool-btn" data-command="italic" title="斜体 (Ctrl+I)">
+                        <em>I</em>
+                    </button>
+                    <button class="tool-btn" id="indentBtn" title="首行缩进2字符">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="10" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <div class="tool-divider"></div>
+                    <button class="tool-btn ai-rewrite-btn" id="aiRewriteBtn" title="AI重写选中内容 (Ctrl+K)" style="display: none;">
+                        <span>✨ AI重写</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="toolbar-right">
+                <button class="action-btn secondary" id="saveBtn" style="display: none;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                        <polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/>
+                    </svg>
+                    <span>保存</span>
+                </button>
+                <button class="action-btn primary" id="exportBtn" style="display: none;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                        <polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    <span>导出DOCX</span>
+                </button>
+                <button class="action-btn icon" id="toggleSidebar" title="AI助手" style="display: none;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 欢迎/选择区域 -->
+            <div class="welcome-section" id="welcomeSection">
+                <div class="welcome-container">
+                    <div class="welcome-header">
+                        <div class="welcome-logo">🧠</div>
+                        <h1>AI 智能文档编辑</h1>
+                        <p>AI驱动的下一代文档编辑体验</p>
+                    </div>
+
+                    <div class="action-cards">
+                        <!-- 上传文档 -->
+                        <div class="action-card" id="uploadCard">
+                            <div class="card-icon">📄</div>
+                            <h3>上传文档</h3>
+                            <p>上传现有的 Word 文档进行编辑，100%保留原始格式</p>
+                            <button class="card-btn primary" onclick="document.getElementById('fileInput').click()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                    <polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                选择文件
+                            </button>
+                            <input type="file" id="fileInput" accept=".docx" style="display: none;">
+                            <span class="card-hint">支持 .docx 格式</span>
+                        </div>
+
+                        <!-- 新建文档 -->
+                        <div class="action-card" id="newDocCard">
+                            <div class="card-icon">✨</div>
+                            <h3>新建文档</h3>
+                            <p>从空白开始，使用AI辅助快速创建专业文档</p>
+                            <button class="card-btn secondary" onclick="aiEditor.createNewDocument()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 5v14M5 12h14"/>
+                                </svg>
+                                新建空白文档
+                            </button>
+                            <span class="card-hint">支持 @@@指令 快速生成</span>
+                        </div>
+                    </div>
+
+                    <div class="features-list">
+                        <div class="feature-item">
+                            <span class="feature-icon">⚡</span>
+                            <span>Tab键智能续写</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🔮</span>
+                            <span>@@@指令即时生成</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">💬</span>
+                            <span>AI对话助手</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">✏️</span>
+                            <span>选中重写优化</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 编辑区域 -->
+            <div class="editor-section" id="editorSection" style="display: none;">
+                <div class="editor-container">
+                    <div class="document-editor" id="documentEditor"></div>
+                </div>
+            </div>
+
+            <!-- AI侧边栏 -->
+            <aside class="ai-sidebar" id="aiSidebar">
+                <div class="sidebar-header">
+                    <h3>🤖 AI助手</h3>
+                    <button class="close-sidebar" id="closeSidebar">×</button>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="welcome-message">
+                        <p>👋 你好！我是AI助手，可以帮你：</p>
+                        <ul>
+                            <li>输入"帮我写..."生成内容</li>
+                            <li>回答关于文档的问题</li>
+                            <li>优化和改进文档</li>
+                        </ul>
+                        <p class="tip">💡 小技巧：在文档中输入 <code>@@@教学目标</code> 按回车即可生成！</p>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <textarea id="chatInput" placeholder="输入消息，如"帮我写一段课程简介"..." rows="2"></textarea>
+                    <button class="send-btn" id="sendChatBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                    </button>
+                </div>
+            </aside>
+        </main>
+
+        <!-- 悬浮AI重写按钮 -->
+        <div class="floating-ai-btn" id="floatingAiBtn" style="display: none;">
+            <button class="ai-quick-btn" onclick="aiEditor.openFloatingRewrite()">
+                <span>✨</span> AI重写
+            </button>
+        </div>
+
+        <!-- 悬浮AI重写对话框 -->
+        <div class="floating-rewrite-popup" id="floatingRewritePopup" style="display: none;">
+            <div class="popup-arrow"></div>
+            <div class="popup-content">
+                <div class="popup-header">
+                    <span class="popup-title">✨ AI重写</span>
+                    <button class="popup-close" onclick="aiEditor.closeFloatingRewrite()">×</button>
+                </div>
+                <div class="popup-body">
+                    <div class="selected-preview">
+                        <div class="preview-label">选中文本</div>
+                        <div class="preview-text" id="floatingSelectedText"></div>
+                    </div>
+                    <div class="rewrite-input-area">
+                        <input type="text" id="floatingRewriteInput" placeholder="输入重写要求，如：更简洁、更专业、扩展内容..." onkeydown="if(event.key==='Enter')aiEditor.doFloatingRewrite()">
+                    </div>
+                    <div class="rewrite-result-area" id="floatingResultArea" style="display: none;">
+                        <div class="result-label">重写结果</div>
+                        <div class="result-text" id="floatingResultText"></div>
+                    </div>
+                </div>
+                <div class="popup-footer">
+                    <button class="popup-btn secondary" onclick="aiEditor.closeFloatingRewrite()">取消</button>
+                    <button class="popup-btn primary" id="floatingRewriteBtn" onclick="aiEditor.doFloatingRewrite()">重写</button>
+                    <button class="popup-btn success" id="floatingApplyBtn" onclick="aiEditor.applyFloatingRewrite()" style="display: none;">应用</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 加载遮罩 -->
+        <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="loadingText">加载中...</div>
+        </div>
+
+        <!-- 通知提示 -->
+        <div class="notifications" id="notifications"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/ai_editor.js') }}"></script>
+</body>
+</html>

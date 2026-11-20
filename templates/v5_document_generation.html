@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <title>智能文档生成</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% if is_mobile %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
+    {% endif %}
+    <style>
+        body {
+            background: #fef9f3;
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: clamp(0.75rem, 2vw, 1.25rem);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+            overflow: auto;
+        }
+
+        .v5-container {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 900px;
+            min-width: 320px;
+            height: min(900px, calc(100dvh - 2rem));
+            max-height: calc(100dvh - 2rem);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        /* Header */
+        .v5-header {
+            background: linear-gradient(135deg, #fef9f3 0%, #fef9f3 100%);
+            color: black;
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .v5-header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            color: #333;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: #e0e0e0;
+            border-color: #ccc;
+        }
+
+        /* Main Content Area */
+        .v5-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-bottom: 1rem;
+            min-height: 0;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .upload-section.hidden {
+            display: none;
+        }
+
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f9fafb;
+        }
+
+        .upload-area:hover {
+            border-color: #fef9f3;
+            background: #f3f4f6;
+        }
+
+        .upload-area.has-file {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .upload-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .upload-text {
+            color: #374151;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .upload-hint {
+            color: #6b7280;
+            font-size: 0.8rem;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            color: #059669;
+            font-weight: 500;
+        }
+
+        /* Model Selection */
+        .model-section {
+            padding: 0.75rem 2rem;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .model-section.hidden {
+            display: none;
+        }
+
+        .model-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Model Selection - Grid Layout */
+        .model-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            align-items: stretch;
+        }
+
+        .model-option {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 1rem;
+            padding: 1.25rem 1rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 200px;
+        }
+
+        .model-option:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.05);
+            border-color: #667eea;
+        }
+
+        .model-option.selected {
+            border: 2px solid #667eea;
+            background: linear-gradient(180deg, #f0f4ff 0%, #ffffff 100%);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .model-option input[type="radio"] {
+            display: none;
+        }
+
+        .model-header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .model-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Badge Styles */
+        .model-badge {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 999px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .model-badge.fast {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+
+        .model-badge.quality {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        .model-badge.pro {
+            background: #fdf2f8;
+            color: #db2777;
+        }
+
+        /* Pricing Tag */
+        .price-tag {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #059669;
+            background: #ecfdf5;
+            padding: 0.4rem 0.6rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            display: inline-block;
+            border: 1px dashed #34d399;
+        }
+
+        .price-tag.paid {
+            color: #7c3aed;
+            background: #f5f3ff;
+            border-color: #a78bfa;
+        }
+
+        .price-tag.expensive {
+            color: #b91c1c;
+            background: #fef2f2;
+            border-color: #f87171;
+        }
+
+        .quota-info {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+            display: block;
+        }
+
+        .model-desc {
+            font-size: 0.85rem;
+            color: #4b5563;
+            line-height: 1.4;
+            margin-bottom: 1rem;
+            flex-grow: 1;
+        }
+
+        /* Feature List */
+        .model-features {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding-top: 0.75rem;
+            border-top: 1px dashed #e5e7eb;
+        }
+
+        .model-feature {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .model-feature span:first-child {
+            font-size: 0.9rem;
+        }
+
+
+        /* Upload file close button */
+        .file-info {
+            position: relative;
+            gap: 0.5rem;
+        }
+
+        .clear-file-btn {
+            background: transparent;
+            border: none;
+            color: #ef4444;
+            font-weight: 700;
+            cursor: pointer;
+            margin-left: auto;
+            padding: 0 0.25rem;
+        }
+
+        .clear-file-btn:hover {
+            color: #b91c1c;
+        }
+
+        /* Regenerate modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 0.75rem;
+            width: min(520px, 92vw);
+            padding: 1.25rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .modal-title {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .modal-close:hover {
+            color: #111827;
+        }
+
+        .modal textarea {
+            width: 100%;
+            min-height: 120px;
+            border: 1px solid #d1d5db;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            resize: vertical;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        .modal-btn {
+            border: none;
+            border-radius: 0.6rem;
+            padding: 0.6rem 1.4rem;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .modal-btn.cancel {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .modal-btn.confirm {
+            background: #667eea;
+            color: #fff;
+        }
+
+        .modal-btn.confirm:hover {
+            background: #5568d3;
+        }
+
+        /* Chat Section */
+        .chat-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem 2rem;
+            background: #f9fafb;
+            min-height: 220px;
+            height: 100%;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message.user {
+            align-items: flex-end;
+        }
+
+        .message.assistant {
+            align-items: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-bubble {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.assistant .message-bubble {
+            background: white;
+            color: #1f2937;
+            border: 1px solid #e5e7eb;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            padding: 1rem 2rem;
+            background: #fffbeb;
+            border-top: 1px solid #fde68a;
+            display: none;
+            flex-shrink: 0;
+        }
+
+        .progress-section.active {
+            display: block;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .progress-title {
+            font-weight: 600;
+            color: #92400e;
+        }
+
+        .progress-status {
+            font-size: 0.875rem;
+            color: #b45309;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #fef3c7;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-log {
+            font-size: 0.875rem;
+            color: #78350f;
+            font-family: 'Courier New', monospace;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .progress-log-entry {
+            margin-bottom: 0.25rem;
+        }
+
+        /* Input Section */
+        .input-section {
+            padding: 1rem 2rem;
+            border-top: 1px solid #e5e7eb;
+            background: white;
+            flex-shrink: 0;
+            padding-bottom: max(1rem, env(safe-area-inset-bottom));
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end;
+        }
+
+        .input-field {
+            flex: 1;
+            border: 1px solid #d1d5db;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            resize: none;
+            max-height: 120px;
+            font-family: inherit;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .send-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 0;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: #5568d3;
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        .send-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Result Section */
+        .result-section {
+            padding: 1.5rem 2rem;
+            background: #f0fdf4;
+            border-top: 1px solid #86efac;
+            display: none;
+            flex-direction: column;
+            gap: 1rem;
+            flex-shrink: 0;
+        }
+
+        .result-section.active {
+            display: flex;
+        }
+
+        /* 按钮容器 - 横向排列 */
+        .result-buttons {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .result-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #065f46;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* 按钮样式 - 小长方形并排 */
+        .download-btn,
+        .regenerate-btn,
+        .new-generation-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .download-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+        }
+
+        .download-btn:hover {
+            background: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .regenerate-btn {
+            background: #4b5563;
+            color: #ffffff;
+            border: none;
+            box-shadow: 0 2px 6px rgba(75, 85, 99, 0.2);
+        }
+
+        .regenerate-btn:hover {
+            background: #374151;
+            transform: translateY(-1px);
+        }
+
+        .new-generation-btn {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .new-generation-btn:hover {
+            background: #f3f4f6;
+            border-color: #5568d3;
+        }
+
+        /* Error Message */
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin: 1rem 2rem;
+            color: #991b1b;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Page Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .anim-up {
+            animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+        }
+
+        /* Scrollbar Styling */
+        .chat-messages::-webkit-scrollbar,
+        .progress-log::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb,
+        .progress-log::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover,
+        .progress-log::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        /* 中等屏幕优化 (768px - 1024px) */
+        @media (max-width: 1024px) {
+            body {
+                padding: 0.5rem;
+            }
+
+            .v5-container {
+                max-width: 100%;
+                height: calc(100dvh - 1rem);
+                max-height: calc(100dvh - 1rem);
+            }
+
+            .model-options {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        /* 平板和小屏幕 (最大 768px) */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            .v5-container {
+                height: 100dvh;
+                max-height: 100dvh;
+                border-radius: 0;
+                max-width: 100%;
+            }
+
+            .v5-header {
+                padding: 1rem;
+            }
+
+            .v5-header h1 {
+                font-size: 1.2rem;
+            }
+
+            .upload-section,
+            .chat-messages,
+            .input-section,
+            .result-section,
+            .model-section {
+                padding: 1rem;
+            }
+
+            .model-options {
+                grid-template-columns: 1fr;
+            }
+
+            .message-bubble {
+                max-width: 85%;
+            }
+
+            .result-buttons {
+                flex-direction: column;
+            }
+
+            .download-btn,
+            .regenerate-btn,
+            .new-generation-btn {
+                width: 100%;
+                min-width: auto;
+            }
+        }
+
+        /* 小屏手机 (最大 480px) */
+        @media (max-width: 480px) {
+            .v5-header {
+                padding: 0.75rem;
+            }
+
+            .v5-header h1 {
+                font-size: 1rem;
+            }
+
+            .back-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.85rem;
+            }
+
+            .upload-section,
+            .chat-messages,
+            .input-section,
+            .result-section,
+            .model-section {
+                padding: 0.75rem;
+            }
+
+            .upload-area {
+                padding: 1.5rem 1rem;
+            }
+
+            .upload-icon {
+                font-size: 2.5rem;
+            }
+
+            .model-desc {
+                font-size: 0.8rem;
+            }
+
+            .model-features {
+                font-size: 0.7rem;
+            }
+
+            .message-bubble {
+                max-width: 90%;
+                padding: 0.6rem 0.8rem;
+                font-size: 0.9rem;
+            }
+
+            .input-field {
+                font-size: 0.9rem;
+                padding: 0.6rem 0.8rem;
+            }
+
+            .send-btn {
+                width: 36px;
+                height: 36px;
+            }
+
+            .send-btn svg {
+                width: 18px;
+                height: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="v5-container anim-up">
+        <!-- Header -->
+        <div class="v5-header">
+            <h1>
+                <span>🚀</span>
+                <span>智能文档生成</span>
+            </h1>
+            <button class="back-btn" onclick="window.location.href='/'">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+                <span>返回首页</span>
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="v5-content">
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon" id="uploadIcon">📄</div>
+                    <div class="upload-text" id="uploadText">点击或拖拽上传DOCX模板</div>
+                    <div class="upload-hint">支持 .doc / .docx 格式，推荐使用包含 {{placeholder}} 标记的模板</div>
+                    <input type="file" id="fileInput" accept=".doc,.docx" style="display: none;">
+                </div>
+                <div class="file-info" id="fileInfo" style="display: none;">
+                    <span>✅</span>
+                    <span id="fileName"></span>
+                    <button class="clear-file-btn" id="clearFileBtn" title="移除当前模板">✕
+                    </button>
+                </div>
+            </div>
+
+            <!-- Model Selection Section -->
+            <div class="model-section">
+                <div class="model-title">
+                    <span>🤖</span>
+                    <span>选择生成模型</span>
+                </div>
+                <div class="model-options">
+                    <!-- DocuMind Mini Option -->
+                    <label class="model-option selected" for="modelQwenFlash" onclick="selectModel('qwen-flash')">
+                        <input type="radio" name="model" id="modelQwenFlash" value="qwen-flash" checked>
+                        <div class="model-header">
+                            <span class="model-name">DocuMind Mini</span>
+                            <span class="model-badge fast">极速版</span>
+                        </div>
+
+                        <div class="model-price-info">
+                            <div class="price-tag">
+                                🆓 每周免费 3000 字
+                                <span class="quota-info">超出后 20积分/千字</span>
+                            </div>
+                            <div class="quota-progress-text"
+                                style="font-size: 0.7rem; color: #6b7280; margin-bottom: 0.5rem;">
+                                本周已用: <span style="font-weight:600; color: #059669;">{{ current_user.weekly_usage_mini
+                                    }}</span> / 3000 字
+                            </div>
+                        </div>
+
+                        <div class="model-desc">高性价比模型，适合生成大纲、教案草稿等轻量级文档，极速响应。</div>
+
+                        <div class="model-features">
+                            <div class="model-feature"><span>⚡</span> 毫秒级响应</div>
+                            <div class="model-feature"><span>💰</span> 超低成本</div>
+                        </div>
+                    </label>
+
+                    <!-- DocuMind Flash Option -->
+                    <label class="model-option" for="modelQwenPlus" onclick="selectModel('qwen-plus')">
+                        <input type="radio" name="model" id="modelQwenPlus" value="qwen-plus">
+                        <div class="model-header">
+                            <span class="model-name">DocuMind Flash</span>
+                            <span class="model-badge quality">均衡版</span>
+                        </div>
+
+                        <div class="model-price-info">
+                            <div class="price-tag">
+                                🆓 每周免费 1000 字
+                                <span class="quota-info">超出后 30积分/千字</span>
+                            </div>
+                            <div class="quota-progress-text"
+                                style="font-size: 0.7rem; color: #6b7280; margin-bottom: 0.5rem;">
+                                本周已用: <span style="font-weight:600; color: #059669;">{{ current_user.weekly_usage_flash
+                                    }}</span> / 1000 字
+                            </div>
+                        </div>
+
+                        <div class="model-desc">智能文档大模型，在质量与速度之间取得完美平衡，适合日常写作。</div>
+
+                        <div class="model-features">
+                            <div class="model-feature"><span>⚖️</span> 性能均衡</div>
+                            <div class="model-feature"><span>📄</span> 日常办公首选</div>
+                        </div>
+                    </label>
+
+                    <!-- DocuMind Pro Option -->
+                    <label class="model-option" for="modelKimi" onclick="selectModel('kimi')">
+                        <input type="radio" name="model" id="modelKimi" value="kimi">
+                        <div class="model-header">
+                            <span class="model-name">DocuMind Pro</span>
+                            <span class="model-badge pro">专业版</span>
+                        </div>
+
+                        <div class="model-price-info">
+                            <div class="price-tag paid">
+                                💎 无免费额度
+                                <span class="quota-info">40积分/千字</span>
+                            </div>
+                        </div>
+
+                        <div class="model-desc">深度推理模型（基于 Kimi），具备强大的逻辑分析与长文写作能力。</div>
+
+                        <div class="model-features">
+                            <div class="model-feature"><span>🧠</span> 深度思考</div>
+                            <div class="model-feature"><span>📚</span> 长文档专家</div>
+                        </div>
+                    </label>
+
+                    <!-- DocuMind Pro Faster Option -->
+                    <label class="model-option" for="modelFaster" onclick="selectModel('faster')">
+                        <input type="radio" name="model" id="modelFaster" value="faster">
+                        <div class="model-header">
+                            <span class="model-name">Pro Faster</span>
+                            <span class="model-badge pro" style="background:#fff1f2; color:#be123c;">旗舰版</span>
+                        </div>
+
+                        <div class="model-price-info">
+                            <div class="price-tag expensive">
+                                🚀 无免费额度
+                                <span class="quota-info">45积分/千字</span>
+                            </div>
+                        </div>
+
+                        <div class="model-desc">DocuMind 部署模型，极致生成速度与质量的结合，适合高频专业创作。</div>
+
+                        <div class="model-features">
+                            <div class="model-feature"><span>⚡</span> 极致推理</div>
+                            <div class="model-feature"><span>⭐</span> 最佳体验</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Chat Section -->
+            <div class="chat-section">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message assistant">
+                        <div class="message-bubble">
+                            👋 欢迎使用智能文档生成！请先上传DOCX模板，然后告诉我您的需求，我会帮您生成高质量的文档。
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Section (独立出来，不在chat-section内部) -->
+            <div class="progress-section" id="progressSection">
+                <div class="progress-header">
+                    <div class="progress-title">生成进度</div>
+                    <div class="progress-status" id="progressStatus">0%</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-log" id="progressLog"></div>
+            </div>
+
+            <!-- Error Message -->
+            <div class="error-message" id="errorMessage"></div>
+        </div>
+
+        <!-- Result Section -->
+        <div class="result-section" id="resultSection">
+            <div class="result-title">
+                <span>🎉</span>
+                <span>文档生成完成！</span>
+            </div>
+            <div class="result-buttons">
+                <button class="download-btn" id="downloadBtn">
+                    <span>📥 下载文档</span>
+                </button>
+                <button class="regenerate-btn" id="regenerateBtn">
+                    <span>▶️ 继续生成</span>
+                </button>
+                <button class="new-generation-btn" onclick="resetGeneration()">
+                    <span>🔄 新的生成</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="input-section">
+            <div class="input-wrapper">
+                <textarea class="input-field" id="promptInput" placeholder="请描述您的需求，例如：生成一份关于Python编程的教案..." rows="1"
+                    disabled></textarea>
+                <button class="send-btn" id="sendBtn" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M7 11l5-5 5 5M12 18V6" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/v5_document_generation.js') }}"></script>
+</body>
+
+</html>

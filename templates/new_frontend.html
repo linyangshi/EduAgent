@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduAgent - 智能教育助手</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/new_frontend.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="{{ url_for('static', filename='js/auth_sync.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/mobile_nav.js') }}"></script>
+
+<body data-is-logged-in="{% if current_user.is_authenticated %}true{% else %}false{% endif %}">
+
+    <!-- Sidebar -->
+    <aside class="sidebar anim-up" id="sidebar">
+        <!-- Logo Section -->
+        <div class="sidebar-header" style="padding: 1.5rem; display: flex; align-items: center; gap: 12px; margin-bottom: 0.5rem;">
+            <div style="width: 40px; height: 40px; background: white; border-radius: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); flex-shrink: 0;">
+                <img src="/static/images/favicon.svg" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+            <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 1.1rem; font-weight: 700; color: #1e293b; letter-spacing: -0.5px; line-height: 1.2;">EduAgent</span>
+                <span style="font-size: 0.75rem; color: #64748b; font-weight: 500;">智教创想</span>
+            </div>
+        </div>
+
+        <!-- New Task Button -->
+        <div style="padding: 0 1.5rem 1.5rem;">
+            <button class="new-task-btn" id="newTaskBtn" style="width: 100%;">
+                <span class="plus-icon">+</span> 新任务
+            </button>
+        </div>
+
+        <!-- Functional Navigation (Left Middle Box) -->
+        <nav class="sidebar-nav">
+            <a href="javascript:void(0)" onclick="checkLoginAndRedirect('/v5-generation', '使用文档生成前请先登录')" class="nav-item">
+                <span class="nav-icon"><i class="fas fa-file-contract"></i></span> 文档生成
+            </a>
+            <a href="javascript:void(0)" onclick="checkLoginAndRedirect('/blackboard-design', '使用板书设计前请先登录')" class="nav-item">
+                <span class="nav-icon"><i class="fas fa-chalkboard"></i></span> 板书设计
+            </a>
+            <a href="javascript:void(0)" onclick="checkLoginAndRedirect('/knowledge-base', '使用知识库前请先登录')" class="nav-item">
+                <span class="nav-icon"><i class="fas fa-book"></i></span>
+                知识库
+            </a>
+            <a href="javascript:void(0)" onclick="checkLoginAndRedirect('/ai-editor', '使用AI编辑器前请先登录')" class="nav-item">
+                <span class="nav-icon"><i class="fas fa-edit"></i></span>
+                AI编辑器
+            </a>
+        </nav>
+
+        <!-- Chat History List -->
+        <div class="sidebar-history">
+            <div class="history-label">近期任务</div>
+            <div class="history-list" id="historyList">
+                <!-- History items will be injected here via JS -->
+            </div>
+        </div>
+
+        <!-- User Profile (Left Bottom Box) -->
+        <div class="sidebar-footer">
+            <!-- Authenticated State -->
+            <a href="/profile" class="user-profile"
+                style="{% if not current_user.is_authenticated %}display: none;{% endif %} text-decoration: none; align-items: center; width: 100%;">
+                <div class="user-avatar-container" style="position: relative; width: 32px; height: 32px;">
+                    {% if current_user.is_authenticated and current_user.avatar_url %}
+                    <img src="{{ current_user.avatar_url }}" alt="Avatar" class="user-avatar"
+                        onerror="this.style.display='none'; document.getElementById('sidebar-avatar-fallback').style.display='flex';"
+                        style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                    <div id="sidebar-avatar-fallback" class="user-avatar"
+                        style="display:none;align-items:center;justify-content:center;background:#1677ff;color:white;font-size:14px;font-weight:600;width:100%;height:100%;border-radius:50%;">
+                        {{ current_user.username[0] | upper }}
+                    </div>
+                    {% elif current_user.is_authenticated %}
+                    <div class="user-avatar"
+                        style="display:flex;align-items:center;justify-content:center;background:#1677ff;color:white;font-size:14px;font-weight:600;width:100%;height:100%;border-radius:50%;">
+                        {{ current_user.username[0] | upper }}
+                    </div>
+                    {% else %}
+                    <div class="user-avatar" style="display:flex;align-items:center;justify-content:center;background:#1677ff;color:white;font-size:14px;font-weight:600;width:100%;height:100%;border-radius:50%;">?</div>
+                    {% endif %}
+                </div>
+                <span class="user-name">{{ current_user.username if current_user.is_authenticated else '用户' }}</span>
+            </a>
+
+            <!-- Guest State -->
+            <div class="guest-only" style="{% if current_user.is_authenticated %}display: none;{% endif %} gap: 8px; width: 100%;">
+                <a href="/login"
+                    style="flex: 1; padding: 8px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 500; text-align: center;">登录</a>
+                <a href="/register"
+                    style="flex: 1; padding: 8px 12px; background: #f3f4f6; color: #374151; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 500; text-align: center; border: 1px solid #e5e7eb;">注册</a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+        <div class="mobile-logo" style="display: flex; align-items: center; gap: 8px;">
+            <img src="/static/images/favicon.svg" alt="Logo" style="height: 24px; width: 24px; object-fit: contain;">
+            <span style="font-weight: 700;">EduAgent</span>
+        </div>
+    </header>
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+
+    <!-- Main Content -->
+    <main class="main-content anim-up anim-delay-1">
+
+        <!-- Home View (Initial State) -->
+        <div id="home-view" class="home-view">
+            <div class="home-content">
+                <h1 class="home-title">EduAgent, 你的 AI 办公助手</h1>
+                <div class="home-mascot">
+                    <span class="mascot-bubble">hi</span>
+                    <div class="mascot-placeholder"><i class="fas fa-robot"></i></div>
+                </div>
+
+                <!-- Feature Grid (Top Right Options Replacement) -->
+                <div class="home-features">
+                    <a href="/v5-generation" class="feature-chip">
+                        <span class="chip-icon"><i class="fas fa-file-contract"></i></span> 文档生成
+                    </a>
+                    <a href="/blackboard-design" class="feature-chip">
+                        <span class="chip-icon"><i class="fas fa-chalkboard"></i></span> 板书设计
+                    </a>
+                    <a href="/knowledge-base" class="feature-chip">
+                        <span class="chip-icon"><i class="fas fa-book-open"></i></span> 知识库
+                    </a>
+                    <a href="/ai-editor" class="feature-chip">
+                        <span class="chip-icon"><i class="fas fa-edit"></i></span> AI编辑器
+                    </a>
+                </div>
+
+                <!-- Central Input Box -->
+                <div class="home-input-container">
+                    <textarea id="homeInput" class="home-input" placeholder="给我发消息或布置任务" rows="1"></textarea>
+                    <div class="input-actions">
+                        <button class="action-btn">@</button>
+                        <button class="action-btn">📎</button>
+                        <button class="send-btn-home" id="homeSendBtn">⬆</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat View (Active State) -->
+        <div id="chat-view" class="chat-view hidden">
+            <!-- Header (Optional, simplified) -->
+            <div class="chat-header">
+                <span id="chatTitle">新任务</span>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages will be injected here -->
+            </div>
+
+            <!-- Suggested Questions (Shows after generation) -->
+            <div class="suggested-questions hidden" id="suggestedQuestions">
+                <div class="suggestion-label">你可能想问</div>
+                <div class="suggestion-list">
+                    <button class="suggestion-pill">怎么用扣子空间写公众号文章</button>
+                    <button class="suggestion-pill">设计一张小红书风格的产品海报</button>
+                    <button class="suggestion-pill">分析销售数据表格找出增长趋势</button>
+                </div>
+            </div>
+
+            <!-- Running Status (Floating Capsule) -->
+            <div class="running-status hidden" id="runningStatus">
+                <div class="status-icon">🤖</div>
+                <div class="status-text">已成功运行...</div>
+                <div class="status-spinner"></div>
+            </div>
+
+            <!-- Bottom Input Box -->
+            <div class="chat-input-container">
+                <div class="input-wrapper">
+                    <textarea id="chatInput" class="chat-input" placeholder="发送消息..." rows="1"></textarea>
+                    <div class="input-actions">
+                        <button class="action-btn">@</button>
+                        <button class="action-btn">📎</button>
+                        <button class="send-btn-chat" id="chatSendBtn">⬆</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Premium Feedback Button -->
+        <a href="/feedback" class="floating-feedback-btn">
+            <i class="fas fa-comment-dots"></i>
+            <span class="fb-text">意见反馈</span>
+        </a>
+
+        <style>
+            /* Premium Floating Feedback Button for Main App */
+            .floating-feedback-btn {
+                position: fixed;
+                right: 30px;
+                bottom: 30px;
+                height: 52px;
+                min-width: 52px;
+                background: linear-gradient(135deg, #1677ff 0%, #4096ff 100%);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                color: white !important;
+                border-radius: 26px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 8px 32px rgba(22, 119, 255, 0.3);
+                text-decoration: none !important;
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                z-index: 1000;
+                cursor: pointer;
+                padding: 0 16px;
+                overflow: hidden;
+                animation: fb-float 3s ease-in-out infinite;
+            }
+
+            @keyframes fb-float {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-8px); }
+            }
+
+            .floating-feedback-btn i {
+                font-size: 20px;
+                margin: 0;
+                transition: transform 0.3s ease;
+                color: white !important;
+            }
+
+            .fb-text {
+                max-width: 0;
+                opacity: 0;
+                white-space: nowrap;
+                overflow: hidden;
+                transition: all 0.4s ease;
+                font-weight: 600;
+                font-size: 14px;
+                margin-left: 0;
+                color: white !important;
+            }
+
+            .floating-feedback-btn:hover {
+                transform: scale(1.05);
+                box-shadow: 0 12px 40px rgba(22, 119, 255, 0.4);
+                color: white !important;
+                animation-play-state: paused;
+            }
+
+            .floating-feedback-btn:hover .fb-text {
+                max-width: 100px;
+                opacity: 1;
+                margin-left: 10px;
+            }
+            .floating-feedback-btn:hover i {
+                transform: rotate(15deg);
+            }
+
+            @media (max-width: 768px) {
+                .floating-feedback-btn {
+                    right: 16px;
+                    bottom: calc(88px + env(safe-area-inset-bottom));
+                    height: 46px;
+                    min-width: 46px;
+                    padding: 0 12px;
+                    border-radius: 23px;
+                }
+
+                .floating-feedback-btn .fb-text {
+                    display: none;
+                }
+            }
+        </style>
+
+    </main>
+
+    <script>
+        window.currentUser = {
+            username: "{{ current_user.username if current_user.is_authenticated else '' }}",
+            avatar_url: "{{ current_user.avatar_url if current_user.is_authenticated and current_user.avatar_url else '' }}",
+            initial: "{{ current_user.username[0]|upper if current_user.is_authenticated and current_user.username else '?' }}"
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="{{ url_for('static', filename='js/auth_check.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/new_frontend.js') }}"></script>
+</body>
+
+</html>

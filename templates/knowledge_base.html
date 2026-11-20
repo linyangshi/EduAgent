@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI知识库 - EduAgent智教创想</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% if is_mobile %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
+    {% endif %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="{{ url_for('static', filename='js/auth_sync.js') }}"></script>
+    <style>
+        html {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            background: #f0f2f5;
+            height: 100vh;
+            padding: 2rem 1rem;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Inter", sans-serif;
+            overflow: hidden;
+            box-sizing: border-box;
+            color: #1e293b;
+        }
+
+        .kb-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 1.25rem;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 4rem);
+            max-height: calc(100vh - 4rem);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .kb-header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .kb-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .kb-title h1 {
+            margin: 0;
+            font-size: 1.75rem;
+        }
+
+        .kb-title p {
+            margin: 0.25rem 0 0 0;
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .kb-stats {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 2px;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        /* Tab切换样式 */
+        .tab-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            background: #f1f5f9;
+            padding: 0.35rem;
+            border-radius: 0.75rem;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 0.6rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .tab-button.active {
+            background: #ffffff;
+            color: #1677ff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .tab-button:hover:not(.active) {
+            color: #374151;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .kb-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            flex: 1;
+            min-height: 0;
+            max-height: 100%;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            border-right: 1px solid #f1f5f9;
+            padding: 2rem;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: #ffffff;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            min-height: 0;
+            max-height: 100%;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        .upload-section {
+            margin-bottom: 2rem;
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border: 1px dashed #e2e8f0;
+        }
+
+        .upload-box {
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-box:hover {
+            transform: translateY(-2px);
+        }
+
+        .upload-box.dragover {
+            border-color: #1677ff;
+            background: #e6f4ff;
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #1677ff;
+            opacity: 0.8;
+        }
+
+        .upload-text {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-list {
+            margin-top: 1.5rem;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: #ffffff;
+            border: 1px solid #f1f5f9;
+            border-radius: 0.85rem;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            justify-content: space-between;
+        }
+
+        .file-item:hover {
+            border-color: #1677ff;
+            box-shadow: 0 4px 12px rgba(22, 119, 255, 0.08);
+            transform: translateX(4px);
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+
+        .file-meta {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        .file-delete {
+            background: #fff1f2;
+            color: #e11d48;
+            border: 1px solid #ffe4e6;
+            border-radius: 0.6rem;
+            padding: 0.4rem 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .file-delete:hover {
+            background: #e11d48;
+            color: white;
+            border-color: #e11d48;
+        }
+
+        .chat-section {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-height: 100%;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        .message {
+            display: flex;
+            gap: var(--spacing-lg, 1rem);
+            max-width: 90%;
+            margin-bottom: var(--spacing-xl, 1.5rem);
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .avatar-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .message.user .message-avatar {
+            background-color: var(--primary-color, #10a37f);
+            color: white;
+        }
+
+        .message.assistant .message-avatar {
+            background-color: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .message.assistant .message-content {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #1e293b;
+        }
+
+        .message-content {
+            background-color: white;
+            padding: 1.25rem 1.5rem;
+            border-radius: 0 1.25rem 1.25rem 1.25rem;
+            border: 1px solid #e2e8f0;
+            word-wrap: break-word;
+            max-width: 80%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            position: relative;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #1677ff 0%, #4096ff 100%);
+            color: white;
+            border-color: #1677ff;
+            border-radius: 1.25rem 0 1.25rem 1.25rem;
+            box-shadow: 0 4px 12px rgba(22, 119, 255, 0.15);
+        }
+
+        .message-text {
+            line-height: 1.7;
+            font-size: 1rem;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--text-muted, #9ca3af);
+            margin-top: var(--spacing-sm, 0.5rem);
+        }
+
+        .message.user .message-time {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .message-sources {
+            margin-top: var(--spacing-sm, 0.5rem);
+            padding-top: var(--spacing-sm, 0.5rem);
+            border-top: 1px solid var(--border-color, #e5e7eb);
+        }
+
+        .source-tag {
+            display: inline-block;
+            background: #f3f4f6;
+            color: #6b7280;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin: 0.25rem 0.25rem 0 0;
+        }
+
+        .chat-input {
+            padding: 2rem 3rem;
+            border-top: 1px solid #f1f5f9;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            flex-shrink: 0;
+        }
+
+        .input-box {
+            display: flex;
+            gap: 1rem;
+            background: white;
+            padding: 0.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.25rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .input-box:focus-within {
+            border-color: #1677ff;
+            box-shadow: 0 4px 20px rgba(22, 119, 255, 0.1);
+        }
+
+        .input-field {
+            flex: 1;
+            border: none;
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            resize: none;
+            background: transparent;
+            max-height: 200px;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .send-button {
+            background: #1677ff;
+            color: white;
+            border: none;
+            border-radius: 0.85rem;
+            padding: 0.6rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .send-button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-dots {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 4px;
+            height: 24px;
+        }
+
+        .loading-dots .dot {
+            width: 8px;
+            height: 8px;
+            background: #1677ff;
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: dot-pulse 1.4s infinite ease-in-out;
+        }
+
+        .loading-dots .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .loading-dots .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes dot-pulse {
+            0%, 100% {
+                transform: scale(0.8);
+                opacity: 0.3;
+                filter: blur(0.5px);
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.8;
+                filter: blur(0px) drop-shadow(0 0 5px rgba(22, 119, 255, 0.5));
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #9ca3af;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .upload-progress {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0;
+            transition: width 0.3s;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            .kb-container {
+                height: 100vh;
+                max-height: 100vh;
+                border-radius: 0;
+            }
+
+            .kb-header {
+                padding: 0.5rem 0.75rem;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                align-items: center;
+                gap: 0.25rem;
+            }
+            
+            .kb-header > div:first-child {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .back-button {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.9rem;
+            }
+
+            .kb-title h1 {
+                font-size: 1.1rem;
+            }
+            
+            .kb-title p#kbDescription {
+                display: none; /* Hide description string on mobile to save vertical space */
+            }
+
+            .kb-stats {
+                gap: 0.75rem;
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .stat-value {
+                font-size: 1rem;
+            }
+            
+            .stat-label {
+                font-size: 0.75rem;
+            }
+
+            .kb-content {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+            }
+
+            .sidebar {
+                max-height: 20vh; /* Strongly restrict mobile info panel */
+                border-right: none;
+                border-bottom: 1px solid #e5e7eb;
+                padding: 0.5rem;
+            }
+            
+            /* Aggressively compress public KB prompt state */
+            .sidebar .empty-state {
+                padding: 0.5rem;
+            }
+            .sidebar .empty-icon {
+                display: none; /* Hide the big 📚 icon */
+            }
+            .sidebar h3 {
+                font-size: 1rem;
+                margin: 0;
+            }
+            .sidebar .empty-state > p {
+                margin-top: 0.25rem !important;
+                font-size: 0.8rem;
+                margin-bottom: 0.5rem;
+            }
+            .sidebar .upload-hint {
+                margin-top: 0.25rem !important;
+                padding: 0.5rem !important;
+            }
+            .sidebar .upload-hint h4 {
+                margin-bottom: 0.25rem !important;
+                font-size: 0.85rem;
+            }
+            .sidebar .upload-hint p {
+                font-size: 0.8rem !important;
+            }
+
+            .chat-messages {
+                padding: 0.75rem;
+            }
+
+            .chat-input {
+                padding: 0.75rem;
+            }
+        }
+
+        /* 思考过程和回答样式 */
+        .kb-thinking-section {
+            background: #f8fafc;
+            border-left: 3px solid #1677ff;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            color: #475569;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+        }
+
+        .kb-thinking-section.kb-collapsible {
+            cursor: default;
+        }
+
+        .kb-thinking-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .kb-thinking-header.kb-toggle-header {
+            cursor: pointer;
+            user-select: none;
+            margin-bottom: 0;
+            padding: 0.25rem 0;
+            transition: all 0.2s ease;
+        }
+
+        .kb-thinking-header.kb-toggle-header:hover {
+            color: #475569;
+        }
+
+        .kb-thinking-section:not(.kb-collapsed) .kb-thinking-header.kb-toggle-header {
+            margin-bottom: 0.75rem;
+        }
+
+        .kb-thinking-icon {
+            font-size: 1rem;
+        }
+
+        .kb-thinking-title {
+            font-weight: 600;
+        }
+
+        .kb-thinking-duration {
+            margin-left: auto;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            background: #e2e8f0;
+            padding: 0.15rem 0.5rem;
+            border-radius: 1rem;
+        }
+
+        .kb-toggle-icon {
+            margin-left: 0.5rem;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            transition: transform 0.3s ease;
+        }
+
+        /* 折叠状态 */
+        .kb-thinking-section.kb-collapsed .kb-thinking-content {
+            display: none;
+        }
+
+        .kb-thinking-section.kb-collapsed .kb-toggle-icon {
+            transform: rotate(0deg);
+        }
+
+        .kb-thinking-section:not(.kb-collapsed) .kb-toggle-icon {
+            transform: rotate(0deg);
+        }
+
+        .kb-thinking-content {
+            font-size: 0.9rem;
+            color: #475569;
+            line-height: 1.7;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .kb-collapsible-content {
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+            }
+
+            to {
+                opacity: 1;
+                max-height: 2000px;
+            }
+        }
+
+        .kb-thinking-content p {
+            margin: 0.5rem 0;
+        }
+
+        .kb-thinking-content ol,
+        .kb-thinking-content ul {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .kb-thinking-content li {
+            margin: 0.25rem 0;
+        }
+
+        .kb-answer-section {
+            padding: 0;
+        }
+
+        .kb-answer-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .kb-answer-icon {
+            font-size: 1.2rem;
+        }
+
+        .kb-answer-title {
+            font-weight: 700;
+            color: #10a37f;
+            font-size: 1.1rem;
+        }
+
+        .kb-answer-content {
+            font-size: 1rem;
+            color: #1e293b;
+            line-height: 1.8;
+        }
+
+        /* 标题样式 */
+        .kb-answer-content h1,
+        .kb-answer-content h2,
+        .kb-answer-content h3,
+        .kb-answer-content h4,
+        .kb-answer-content h5,
+        .kb-answer-content h6 {
+            color: #0f172a;
+            font-weight: 600;
+            margin-top: 1.25rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+        }
+
+        .kb-answer-content h3 {
+            font-size: 1.15rem;
+            color: #1e40af;
+            border-bottom: 2px solid #e0e7ff;
+            padding-bottom: 0.5rem;
+        }
+
+        .kb-answer-content h4 {
+            font-size: 1.05rem;
+            color: #1e3a5f;
+            padding-left: 0.5rem;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .kb-answer-content h5 {
+            font-size: 1rem;
+            color: #334155;
+        }
+
+        .kb-answer-content p {
+            margin: 0.75rem 0;
+        }
+
+        /* 列表样式 */
+        .kb-answer-content ol,
+        .kb-answer-content ul {
+            margin: 0.75rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .kb-answer-content ul {
+            list-style-type: none;
+            padding-left: 1rem;
+        }
+
+        .kb-answer-content ul>li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin: 0.5rem 0;
+        }
+
+        .kb-answer-content ul>li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #10a37f;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .kb-answer-content ul ul>li::before {
+            content: "◦";
+            color: #64748b;
+        }
+
+        .kb-answer-content ol {
+            list-style-type: decimal;
+        }
+
+        .kb-answer-content ol>li {
+            margin: 0.5rem 0;
+            padding-left: 0.25rem;
+        }
+
+        .kb-answer-content ol>li::marker {
+            color: #10a37f;
+            font-weight: 600;
+        }
+
+        .kb-answer-content li {
+            margin: 0.5rem 0;
+        }
+
+        /* 加粗文本 */
+        .kb-answer-content strong {
+            color: #0f172a;
+            font-weight: 600;
+            background: linear-gradient(to bottom, transparent 60%, #fef08a 60%);
+            padding: 0 2px;
+        }
+
+        /* 引用块 */
+        .kb-answer-content blockquote {
+            border-left: 4px solid #10a37f;
+            margin: 1rem 0;
+            padding: 1rem 1.25rem;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            border-radius: 0 0.75rem 0.75rem 0;
+            color: #166534;
+            font-style: italic;
+        }
+
+        .kb-answer-content blockquote strong {
+            color: #166534;
+            background: none;
+        }
+
+        /* 代码块 */
+        .kb-answer-content code {
+            background: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-size: 0.9em;
+            color: #e11d48;
+        }
+
+        .kb-answer-content pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .kb-answer-content pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+
+        /* 分隔线 */
+        .kb-answer-content hr {
+            border: none;
+            border-top: 2px solid #e2e8f0;
+            margin: 1.5rem 0;
+        }
+
+        /* Premium Floating Feedback Button - Pixel Perfect Sync */
+        .floating-feedback-btn {
+            position: fixed;
+            right: 30px;
+            bottom: 30px;
+            height: 52px;
+            min-width: 52px;
+            background: linear-gradient(135deg, #1677ff 0%, #4096ff 100%);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: white !important;
+            border-radius: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(22, 119, 255, 0.3);
+            text-decoration: none !important;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+            cursor: pointer;
+            padding: 0 16px;
+            overflow: hidden;
+            animation: fb-float 3s ease-in-out infinite;
+        }
+
+        @keyframes fb-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .floating-feedback-btn i {
+            font-size: 20px;
+            margin: 0;
+            transition: transform 0.3s ease;
+            color: white !important;
+        }
+
+        .fb-text {
+            max-width: 0;
+            opacity: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            font-weight: 600;
+            font-size: 14px;
+            margin-left: 0;
+            color: white !important;
+        }
+
+        .floating-feedback-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 40px rgba(22, 119, 255, 0.4);
+            color: white !important;
+            animation-play-state: paused;
+        }
+
+        .floating-feedback-btn:hover .fb-text {
+            max-width: 100px;
+            opacity: 1;
+            margin-left: 10px;
+        }
+
+        .floating-feedback-btn:hover i {
+            transform: rotate(15deg);
+        }
+
+        @media (max-width: 768px) {
+            .floating-feedback-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body data-require-auth="true" data-is-logged-in="{% if current_user.is_authenticated %}true{% else %}false{% endif %}">
+    <div class="kb-container">
+        <div class="kb-header">
+            <div>
+                <a href="/knowledge-base" class="back-button">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>返回列表</span>
+                </a>
+            </div>
+            <div class="kb-title">
+                <div class="kb-logo" style="width: 45px; height: 45px; border-radius: 12px; overflow: hidden; background: white; padding: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                <img src="/static/images/favicon.svg" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+            <div style="margin-left: 10px;">
+                <h1 id="kbName" style="margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px;">加载中...</h1>
+                <p id="kbDescription" style="margin: 0; opacity: 0.8; font-size: 0.85rem;">正在获取知识库详情...</p>
+            </div>
+            </div>
+            <div class="kb-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="fileCount">0</div>
+                    <div class="stat-label">文档数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="chunkCount">0</div>
+                    <div class="stat-label">知识块</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="kb-content">
+            <div class="sidebar">
+                {% if can_manage %}
+                <!-- Tab切换按钮 -->
+                <div class="tab-buttons">
+                    <button class="tab-button active" data-tab="documents"><i class="fas fa-file-upload"></i> 文档上传</button>
+                    <button class="tab-button" data-tab="screenshots"><i class="fas fa-camera"></i> 截图问答</button>
+                </div>
+
+                <!-- 文档上传标签页 -->
+                <div class="tab-content active" id="documentsTab">
+                    <div class="upload-section">
+                        <div class="upload-box" id="uploadBox">
+                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt" style="color: #1677ff;"></i></div>
+                            <div class="upload-text">点击或拖拽文件上传</div>
+                            <div class="upload-text" style="font-size: 0.8rem; margin-top: 0.5rem;">
+                                仅支持 PDF 格式
+                            </div>
+                        </div>
+                        <input type="file" id="fileInput" multiple accept=".pdf">
+                        <div class="upload-progress" id="uploadProgress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <div id="progressText"
+                                style="margin-top: 0.5rem; text-align: center; font-size: 0.85rem; color: #6b7280;">
+                                上传中...</div>
+                        </div>
+                    </div>
+
+                    <div class="file-list">
+                        <h3 style="font-size: 1rem; margin-bottom: 1rem; color: #374151;">我的文档</h3>
+                        <div id="fileList">
+                            <!-- 文件列表将在这里动态生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 截图问答标签页 -->
+                <div class="tab-content" id="screenshotsTab">
+                    <div class="upload-section">
+                        <div class="upload-box" id="screenshotUploadBox">
+                            <div class="upload-icon">📸</div>
+                            <div class="upload-text">点击或拖拽截图上传</div>
+                            <div class="upload-text" style="font-size: 0.8rem; margin-top: 0.5rem;">
+                                支持 PNG、JPG、JPEG等图片格式
+                            </div>
+                            <div class="upload-text" style="font-size: 0.75rem; margin-top: 0.25rem; color: #9ca3af;">
+                                支持长截图自动分割和问答提取
+                            </div>
+                        </div>
+                        <input type="file" id="screenshotInput" accept="image/*">
+                        <div class="upload-progress" id="screenshotProgress" style="display: none;">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="screenshotProgressFill"></div>
+                            </div>
+                            <div id="screenshotProgressText"
+                                style="margin-top: 0.5rem; text-align: center; font-size: 0.85rem; color: #6b7280;">
+                                处理中...</div>
+                        </div>
+                    </div>
+
+                    <div class="file-list">
+                        <h3 style="font-size: 1rem; margin-bottom: 1rem; color: #374151;">
+                            问答截图
+                            <span id="qaCount"
+                                style="font-size: 0.8rem; color: #9ca3af; font-weight: normal;">(0个问答对)</span>
+                        </h3>
+                        <div id="screenshotList">
+                            <!-- 截图列表将在这里动态生成 -->
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <!-- 普通用户只读视图 -->
+                <div style="padding: 2rem; text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
+                    <h3 style="color: #374151; margin-bottom: 0.5rem;">公共知识库</h3>
+                    <p style="color: #6b7280; font-size: 0.9rem; line-height: 1.6;">
+                        该知识库由管理员维护，您可以在右侧对话区域进行智能问答。
+                    </p>
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: #f0f4ff; border-radius: 0.75rem;">
+                        <div style="font-size: 0.85rem; color: #1677ff; font-weight: 500;"><i class="fas fa-lightbulb" style="margin-right: 5px;"></i> 使用提示</div>
+                        <div style="font-size: 0.8rem; color: #6b7280; margin-top: 0.5rem;">
+                            在右侧输入框中输入您的问题，AI将基于知识库内容为您解答。
+                        </div>
+                    </div>
+                    <div class="file-list" style="margin-top: 1.5rem; text-align: left;">
+                        <h3 style="font-size: 1rem; margin-bottom: 1rem; color: #374151;"><i class="fas fa-file-alt" style="margin-right: 6px; color: #1677ff;"></i> 知识库文档</h3>
+                        <div id="fileList">
+                            <!-- 文件列表将在这里动态生成（只读） -->
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="chat-section">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">
+                        <div class="empty-icon" style="background: white; width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; padding: 15px;">
+                            <img src="/static/images/favicon.svg" alt="Logo" style="width: 100%; height: 100%; object-fit: contain;">
+                        </div>
+                        <h2 style="font-size: 1.5rem; color: #1e293b; margin-bottom: 0.5rem; font-weight: 600;">欢迎使用智能助手</h2>
+                        <p style="font-size: 1rem; color: #64748b;">请输入您的问题，我将为您深度解析知识库内容</p>
+                    </div>
+                </div>
+
+                <div class="chat-input" style="display: flex; flex-direction: column; align-items: center;">
+                    <div style="width: 100%; max-width: 900px; display: flex; justify-content: flex-end; margin-bottom: 0.5rem; padding-right: 1rem;">
+                    </div>
+                    <div class="input-box" style="width: 100%;">
+                        <textarea id="questionInput" class="input-field" placeholder="输入您的问题..." rows="1"></textarea>
+                        <button id="sendButton" class="send-button">
+                            <span>发送</span>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="/feedback" class="floating-feedback-btn">
+        <i class="fas fa-comment-dots"></i>
+        <span class="fb-text">意见反馈</span>
+    </a>
+    <script>
+        // 将kb_id传递给JavaScript
+        window.KB_ID = {{ kb_id | tojson }};
+        window.CAN_MANAGE = {{ can_manage | tojson }};
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="{{ url_for('static', filename='js/knowledge_base.js') }}"></script>
+</body>
+
+</html>

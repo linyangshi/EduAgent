@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>登录 - EduAgent 智教创想</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile_login.css', v=1) }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="brand-header">
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='images/favicon.svg') }}" alt="Logo">
+        </div>
+        <h1 class="brand-name">EduAgent 智教创想</h1>
+        <p class="welcome-msg">欢迎回来，请登录您的账号</p>
+    </div>
+
+    <div class="login-card">
+        <form id="loginForm">
+            <div class="form-group">
+                <i class="fas fa-user input-icon"></i>
+                <input type="text" id="username" name="username_or_email" autocomplete="username" placeholder="用户名或邮箱" required>
+            </div>
+
+            <div class="form-group" style="margin-top: 15px;">
+                <i class="fas fa-lock input-icon"></i>
+                <input type="password" id="password" name="password" autocomplete="current-password" placeholder="密码" required>
+            </div>
+
+            <div class="agreement-section">
+                <label class="agreement-label">
+                    <div class="custom-checkbox">
+                        <input type="checkbox" id="agreement" name="agreement" required>
+                        <span class="checkmark"></span>
+                    </div>
+                    <span>已阅读并同意<a href="/terms-of-service" target="_blank">用户协议</a>和<a href="/privacy-policy" target="_blank">隐私政策</a></span>
+                </label>
+            </div>
+
+            <div class="forgot-link-container">
+                <a href="/mobile-forgot-password" class="forgot-link">忘记密码？</a>
+            </div>
+
+            <button type="submit" class="login-btn" id="loginBtn">登 录</button>
+            
+            <div id="errorMsg" style="color: #ff4d4f; font-size: 14px; margin-top: 15px; text-align: center; display: none;"></div>
+        </form>
+    </div>
+
+    <div class="bottom-tip">
+        还没有账号？<a href="/mobile-register" class="register-link">立即注册</a>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/auth_sync.js') }}"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const loginBtn = document.getElementById('loginBtn');
+            const errorMsg = document.getElementById('errorMsg');
+            
+            loginBtn.innerText = '正在登录...';
+            loginBtn.disabled = true;
+            errorMsg.style.display = 'none';
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            if (!document.getElementById('agreement').checked) {
+                alert('登录前请先详细阅读并勾选同意《用户协议》与《隐私政策》');
+                errorMsg.innerText = '请先阅读并同意用户协议和隐私政策';
+                errorMsg.style.display = 'block';
+                loginBtn.innerText = '登 录';
+                loginBtn.disabled = false;
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    // Store token if provided
+                    if (result.token) {
+                        sessionStorage.setItem('access_token', result.token);
+                        localStorage.setItem('access_token', result.token);
+                    }
+                    window.location.href = result.redirect_url || '/app';
+                } else {
+                    errorMsg.innerText = result.error || '登录失败，请检查用户名和密码';
+                    errorMsg.style.display = 'block';
+                    loginBtn.innerText = '登 录';
+                    loginBtn.disabled = false;
+                }
+            } catch (err) {
+                errorMsg.innerText = '网络错误，请稍后再试';
+                errorMsg.style.display = 'block';
+                loginBtn.innerText = '登 录';
+                loginBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

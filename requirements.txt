@@ -1,0 +1,54 @@
+langchain>=0.3.27,<0.4
+langchain-core>=0.3.75,<1
+langchain-community>=0.3.27,<0.4
+langgraph>=0.6,<0.7
+dashscope
+typing-extensions>=4.0.0
+Pillow
+# Optional dependencies for document conversion
+# aspose-words  # Commercial license required
+# docx2python
+# matplotlib
+python-docx>=0.8.11
+docxtpl>=0.16.7  # Word模板引擎（高级功能）
+jinja2>=3.0.0    # 模板语法支持
+
+# Flask API dependencies
+flask>=2.3.0
+flask-cors>=4.0.0
+werkzeug>=2.3.0
+
+# 用户认证相关依赖
+flask-sqlalchemy>=3.0.0
+flask-login>=0.6.0
+flask-wtf>=1.1.0
+wtforms>=3.0.0
+email-validator>=2.0.0
+bcrypt>=4.0.0
+pyjwt>=2.8.0
+
+# 邮件发送相关依赖
+flask-mail>=0.9.1
+
+# 知识库相关依赖
+chromadb>=0.4.15
+sentence-transformers>=2.2.2
+pypdf>=3.17.0
+pymupdf>=1.24.0  # 增强PDF文本提取（支持复杂PDF）
+markdown>=3.4.4
+
+# PDF解析与OCR依赖
+# 系统依赖安装（必须先安装）：
+#   Mac: brew install poppler tesseract tesseract-lang
+#   Ubuntu: apt-get install poppler-utils tesseract-ocr tesseract-ocr-chi-sim
+#   Windows: 下载安装 poppler 和 tesseract
+pdf2image>=1.17.0      # PDF转图片（需要poppler）
+pytesseract>=0.3.10    # OCR文字识别（需要tesseract）
+
+# Direct imports used by the application and model adapters
+openai
+langchain-openai>=0.3,<0.4
+httpx
+requests
+cryptography
+SQLAlchemy

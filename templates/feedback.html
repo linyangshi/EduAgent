@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>意见反馈 - EduAgent智教创想</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/new_frontend.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="feedback-page">
+        <header class="page-header">
+            <div class="header-content">
+                <a href="/app" class="back-link">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                    返回应用
+                </a>
+                <h1>意见反馈</h1>
+            </div>
+        </header>
+
+        <main class="page-content">
+            <div class="feedback-container">
+                <div class="feedback-card">
+                    <div class="card-header">
+                        <h2>我们要听到您的声音</h2>
+                        <p>您的反馈是我们改进产品的最大动力</p>
+                    </div>
+
+                    <form id="feedbackForm" class="feedback-form">
+                        <div class="form-group">
+                            <label>反馈类型</label>
+                            <div class="feedback-types">
+                                <label class="type-option">
+                                    <input type="radio" name="type" value="suggestion" checked>
+                                    <span class="type-box">✨ 产品建议</span>
+                                </label>
+                                <label class="type-option">
+                                    <input type="radio" name="type" value="bug">
+                                    <span class="type-box">🐛 程序Bug</span>
+                                </label>
+                                <label class="type-option">
+                                    <input type="radio" name="type" value="other">
+                                    <span class="type-box">📝 其他</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="content">反馈内容 <span class="required">*</span></label>
+                            <textarea id="content" name="content" placeholder="请详细描述您的建议或遇到的问题..." required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contact">联系方式（选填）</label>
+                            <input type="text" id="contact" name="contact" placeholder="留下邮箱或手机号，方便我们联系您">
+                        </div>
+
+                        <button type="submit" class="submit-btn" id="submitBtn">提交反馈</button>
+                    </form>
+                </div>
+
+                <div class="history-card">
+                    <div class="card-header">
+                        <h2>历史反馈</h2>
+                        <p>您提交的反馈记录</p>
+                    </div>
+                    <div id="feedbackList" class="feedback-list">
+                        <!-- History items will be populated here -->
+                        <div class="loading-history">加载中...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="{{ url_for('static', filename='js/feedback.js') }}"></script>
+</body>
+
+</html>

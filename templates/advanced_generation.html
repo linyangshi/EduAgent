@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <title>@高级生成 - EduAgent智教创想</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% if is_mobile %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
+    {% endif %}
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+        }
+
+        .generation-container {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 800px;
+            padding: 2.5rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            margin: 0 0 0.5rem 0;
+            color: #1a202c;
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .header p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 1rem;
+        }
+
+        .info-section {
+            background: #f9fafb;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .info-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #374151;
+            min-width: 100px;
+        }
+
+        .info-value {
+            color: #6b7280;
+        }
+
+        .progress-section {
+            margin-bottom: 2rem;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .progress-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .progress-status {
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .log-container {
+            background: #1f2937;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+
+        .log-entry {
+            color: #e5e7eb;
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+
+        .log-entry .timestamp {
+            color: #9ca3af;
+            margin-right: 0.5rem;
+        }
+
+        .log-entry.success {
+            color: #10b981;
+        }
+
+        .log-entry.error {
+            color: #ef4444;
+        }
+
+        .log-entry.info {
+            color: #3b82f6;
+        }
+
+        .result-section {
+            display: none;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #10b981;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .result-filename {
+            color: #6b7280;
+            margin: 0 0 2rem 0;
+            word-break: break-all;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 1rem 2.5rem;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .download-btn:active {
+            transform: translateY(0);
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background: #f3f4f6;
+            color: #6b7280;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: #e5e7eb;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-section {
+            display: none;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .error-section.show {
+            display: block;
+        }
+
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .error-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ef4444;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .error-message {
+            color: #6b7280;
+            margin: 0 0 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="generation-container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>
+                <span>🚀</span>
+                <span>@高级生成</span>
+            </h1>
+            <p>AI正在为您生成专业教案...</p>
+        </div>
+
+        <!-- 基本信息 -->
+        <div class="info-section">
+            <div class="info-item">
+                <span class="info-label">📚 教案主题:</span>
+                <span class="info-value" id="topicName">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">📄 模板文件:</span>
+                <span class="info-value" id="templateName">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">⏱️ 预计时间:</span>
+                <span class="info-value">3-5分钟</span>
+            </div>
+        </div>
+
+        <!-- 进度条区域 -->
+        <div class="progress-section" id="progressSection">
+            <div class="progress-header">
+                <div class="progress-title">生成进度</div>
+                <div class="progress-status" id="progressStatus">准备中...</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <!-- 日志容器 -->
+            <div class="log-container" id="logContainer">
+                <div class="log-entry">
+                    <span class="timestamp">[等待中]</span>
+                    <span>系统准备中...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 成功结果区域 -->
+        <div class="result-section" id="resultSection">
+            <div class="result-icon">🎉</div>
+            <h2 class="result-title">教案生成成功！</h2>
+            <p class="result-filename" id="resultFilename"></p>
+            <button class="download-btn" id="downloadBtn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <polyline points="7,10 12,15 17,10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span>下载教案文件</span>
+            </button>
+            <a href="/" class="back-btn">
+                <span>返回主页</span>
+            </a>
+        </div>
+
+        <!-- 错误区域 -->
+        <div class="error-section" id="errorSection">
+            <div class="error-icon">❌</div>
+            <h2 class="error-title">生成失败</h2>
+            <p class="error-message" id="errorMessage"></p>
+            <a href="/" class="back-btn">返回主页</a>
+        </div>
+    </div>
+
+    <script>
+        // 从URL参数获取信息
+        const urlParams = new URLSearchParams(window.location.search);
+        const topic = urlParams.get('topic') || '未知主题';
+        const templateName = urlParams.get('template') || '未知模板';
+        
+        // 显示基本信息
+        document.getElementById('topicName').textContent = topic;
+        document.getElementById('templateName').textContent = templateName;
+
+        // 日志管理
+        const logContainer = document.getElementById('logContainer');
+        let logCount = 0;
+
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.innerHTML = `<span class="timestamp">[${timestamp}]</span><span>${message}</span>`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            logCount++;
+        }
+
+        // 更新进度
+        function updateProgress(percent, status) {
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressStatus').textContent = status;
+        }
+
+        // 显示结果
+        function showResult(filename, downloadUrl) {
+            document.getElementById('progressSection').style.display = 'none';
+            document.getElementById('resultSection').classList.add('show');
+            document.getElementById('resultFilename').textContent = filename;
+            
+            // 设置下载按钮
+            const downloadBtn = document.getElementById('downloadBtn');
+            downloadBtn.onclick = () => {
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+        }
+
+        // 显示错误
+        function showError(message) {
+            document.getElementById('progressSection').style.display = 'none';
+            document.getElementById('errorSection').classList.add('show');
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        // 开始生成
+        async function startGeneration() {
+            try {
+                addLog('📤 正在准备生成任务...', 'info');
+                updateProgress(10, '准备中...');
+                console.log('🚀 开始生成任务...');
+
+                const formData = new FormData();
+                formData.append('topic', topic);
+                
+                // 检查是使用默认模板还是上传文件
+                const useDefault = sessionStorage.getItem('advancedGenUseDefault') === 'true';
+                let templateDisplayName = '';
+                
+                if (useDefault) {
+                    // 使用默认模板
+                    const defaultTemplate = sessionStorage.getItem('advancedGenDefaultTemplate');
+                    if (!defaultTemplate) {
+                        throw new Error('未选择默认模板');
+                    }
+                    
+                    formData.append('use_default_template', 'true');
+                    formData.append('default_template_name', defaultTemplate);
+                    
+                    templateDisplayName = defaultTemplate;
+                    addLog(`📚 使用默认模板: ${defaultTemplate}`, 'info');
+                    
+                } else {
+                    // 使用上传的文件
+                    const fileData = sessionStorage.getItem('advancedGenFile');
+                    const fileName = sessionStorage.getItem('advancedGenFileName');
+                    
+                    if (!fileData || !fileName) {
+                        throw new Error('未找到上传的模板文件');
+                    }
+
+                    // 将base64转回文件
+                    const byteCharacters = atob(fileData.split(',')[1]);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const file = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+
+                    formData.append('file', file, fileName);
+                    formData.append('use_default_template', 'false');
+                    
+                    templateDisplayName = fileName;
+                    addLog(`📤 正在上传模板: ${fileName}`, 'info');
+                }
+
+                addLog(`📚 主题: ${topic}`, 'info');
+                addLog(`📄 模板: ${templateDisplayName}`, 'info');
+                updateProgress(20, '模板已准备');
+
+                // 发送请求
+                const authToken = sessionStorage.getItem('auth_token');
+                const response = await fetch('/api/advanced-generate', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    // 如果是401未授权，提示登录
+                    if (response.status === 401) {
+                        const errorData = await response.json().catch(() => ({}));
+                        const errorMessage = errorData.error || '请先登录';
+                        addLog(`❌ 错误: ${errorMessage}`, 'error');
+                        addLog('🔐 正在跳转到登录页面...', 'info');
+                        setTimeout(() => {
+                            window.location.href = '/login';
+                        }, 2000);
+                        return;
+                    }
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('📦 服务器响应:', result);
+                
+                if (!result.success) {
+                    const errorMsg = result.error || '启动生成失败';
+                    // 如果是需要登录的错误，跳转到登录页面
+                    if (errorMsg.includes('请先登录') || errorMsg.includes('登录')) {
+                        addLog(`❌ 错误: ${errorMsg}`, 'error');
+                        addLog('🔐 正在跳转到登录页面...', 'info');
+                        setTimeout(() => {
+                            window.location.href = '/login';
+                        }, 2000);
+                        return;
+                    }
+                    throw new Error(errorMsg);
+                }
+                
+                const taskId = result.task_id;
+                console.log('🆔 任务ID:', taskId);
+                addLog('✅ 任务已启动', 'success');
+                
+                // 轮询获取进度
+                const pollProgress = async () => {
+                    try {
+                        const progressResponse = await fetch(`/api/advanced-generate/progress/${taskId}`);
+                        
+                        if (!progressResponse.ok) {
+                            console.error('获取进度失败:', progressResponse.status);
+                            return;
+                        }
+                        
+                        const progressData = await progressResponse.json();
+                        console.log('📊 收到进度数据:', progressData);
+                        
+                        // 更新进度条
+                        if (progressData.progress !== undefined) {
+                            updateProgress(progressData.progress, progressData.current_step || progressData.status);
+                        }
+                        
+                        // 更新日志
+                        if (progressData.logs && progressData.logs.length > 0) {
+                            // 只显示新的日志
+                            const newLogs = progressData.logs.slice(lastLogIndex);
+                            newLogs.forEach(log => {
+                                addLog(log.message, 'info');
+                            });
+                            lastLogIndex = progressData.logs.length;
+                        }
+                        
+                        // 检查是否完成
+                        if (progressData.status === 'completed' && progressData.result) {
+                            clearInterval(progressInterval);
+                            addLog('✅ 教案生成完成！', 'success');
+                            
+                            // 从result路径中提取文件名
+                            const filePath = progressData.result;
+                            const fileName = filePath.split('/').pop().split('\\').pop();
+                            console.log('📥 准备下载文件:', fileName);
+                            
+                            const downloadUrl = `/api/advanced-generate/download/${encodeURIComponent(fileName)}`;
+                            setTimeout(() => {
+                                showResult(fileName, downloadUrl);
+                            }, 500);
+                        } else if (progressData.status === 'failed') {
+                            clearInterval(progressInterval);
+                            throw new Error(progressData.error || '生成失败');
+                        }
+                    } catch (err) {
+                        console.error('轮询进度错误:', err);
+                    }
+                };
+                
+                let lastLogIndex = 0;
+                const progressInterval = setInterval(pollProgress, 1000);
+                pollProgress(); // 立即执行第一次
+
+            } catch (error) {
+                addLog(`❌ 错误: ${error.message}`, 'error');
+                setTimeout(() => {
+                    showError(error.message);
+                }, 1000);
+            } finally {
+                // 清理sessionStorage
+                sessionStorage.removeItem('advancedGenFile');
+                sessionStorage.removeItem('advancedGenFileName');
+            }
+        }
+
+        // 页面加载后自动开始
+        window.addEventListener('load', () => {
+            setTimeout(startGeneration, 500);
+        });
+    </script>
+</body>
+</html>
+
